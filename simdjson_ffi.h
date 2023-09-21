@@ -78,15 +78,19 @@ public:
     simdjson_ffi_op_t                     ops[SIMDJSON_FFI_BATCH_SIZE];
     size_t                                ops_n;
     std::stack<simdjson_ffi_stack_frame>  frames;
+    simdjson::padded_string               json;
 };
 
 
+typedef class simdjson_ffi_state simdjson_ffi_state;
+
+
 extern "C" {
-    void *simdjson_ffi_state_new();
-    simdjson_ffi_op_t *simdjson_ffi_state_get_ops(void *state);
-    void simdjson_ffi_state_free(void *state);
-    int simdjson_ffi_parse(void *state, const char *json, size_t len, size_t capacity);
-    int simdjson_ffi_next(void *state);
+    simdjson_ffi_state *simdjson_ffi_state_new();
+    simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state);
+    void simdjson_ffi_state_free(simdjson_ffi_state *state);
+    int simdjson_ffi_parse(simdjson_ffi_state *state, const char *json, size_t len, const char **errmsg);
+    int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg);
 }
 
 

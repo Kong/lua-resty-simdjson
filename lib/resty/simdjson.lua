@@ -7,6 +7,7 @@ local table_new = require("table.new")
 local assert = assert
 
 local C = ffi.load("/home/datong/code/dndx/lua-resty-simdjson/libsimdjson_ffi.so")
+local errmsg = require("resty.core.base").get_errmsg_ptr()
 
 ffi.cdef([[
 enum simdjson_ffi_opcode_t {
@@ -27,11 +28,14 @@ typedef struct {
 } simdjson_ffi_op_t;
 
 
-void *simdjson_ffi_state_new();
-simdjson_ffi_op_t *simdjson_ffi_state_get_ops(void *state);
-void simdjson_ffi_state_free(void *state);
-int simdjson_ffi_parse(void *state, const char *json, size_t len, size_t capacity);
-int simdjson_ffi_next(void *state);
+typedef struct simdjson_ffi_state simdjson_ffi_state;
+
+
+simdjson_ffi_state *simdjson_ffi_state_new();
+simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state);
+void simdjson_ffi_state_free(simdjson_ffi_state *state);
+int simdjson_ffi_parse(simdjson_ffi_state *state, const char *json, size_t len, char **errmsg);
+int simdjson_ffi_next(simdjson_ffi_state *state, char **errmsg);
 ]])
 
 
@@ -43,6 +47,7 @@ local SIMDJSON_FFI_OPCODE_STRING = C.SIMDJSON_FFI_OPCODE_STRING
 local SIMDJSON_FFI_OPCODE_BOOLEAN = C.SIMDJSON_FFI_OPCODE_BOOLEAN
 local SIMDJSON_FFI_OPCODE_NULL = C.SIMDJSON_FFI_OPCODE_NULL
 local SIMDJSON_FFI_OPCODE_RETURN = C.SIMDJSON_FFI_OPCODE_RETURN
+local SIMDJSON_FFI_ERROR = -1
 
 
 
@@ -84,8 +89,6 @@ end
 
 local json = io.open("100mb.json", "rb"):read("*a")
 
-local padded_json = json .. string.rep("\x00", SIMDJSON_PADDING)
-
 local state = C.simdjson_ffi_state_new()
 print("state = ", state)
 local ops = C.simdjson_ffi_state_get_ops(state)
@@ -96,12 +99,13 @@ for i = 1, 10 do
 ngx.update_time()
 local now = ngx.now()
 
-local res = C.simdjson_ffi_parse(state, padded_json, #json, #padded_json)
+local res = C.simdjson_ffi_parse(state, json, #json, errmsg)
+if res == SIMDJSON_FFI_ERROR then
+    print("simdjson_ffi_parse: error: ", ffi_string(errmsg[0]))
+end
 ngx.update_time()
 print("simdjson_ffi_parse: ", res, ", time = ", ngx.now() - now)
 
-
-assert(res == 1)
 
 local ops_index = 0
 local ops_size = 0
@@ -150,7 +154,11 @@ local function build_array(state)
             end
         end
 
-        ops_size = C.simdjson_ffi_next(state)
+        ops_size = C.simdjson_ffi_next(state, errmsg)
+        if ops_size == SIMDJSON_FFI_ERROR then
+            return nil, ffi_string(errmsg[0])
+        end
+
         ops_index = 0
     until ops_size == 0
 
@@ -206,7 +214,10 @@ function build_object(state)
             end
         end
 
-        ops_size = C.simdjson_ffi_next(state)
+        ops_size = C.simdjson_ffi_next(state, errmsg)
+        if ops_size == SIMDJSON_FFI_ERROR then
+            return nil, ffi_string(errmsg[0])
+        end
         ops_index = 0
     until ops_size == 0
 
