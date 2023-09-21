@@ -172,7 +172,9 @@ function _M:_build_array()
             end
         end
 
-        ngx_sleep(0)
+        if self.yield then
+            ngx_sleep(0)
+        end
 
         self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
@@ -240,7 +242,9 @@ function _M:_build_object()
             end
         end
 
-        ngx_sleep(0)
+        if self.yield then
+            ngx_sleep(0)
+        end
 
         self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
