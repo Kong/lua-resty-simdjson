@@ -57,7 +57,7 @@ static bool simdjson_ffi_process_value(simdjson_ffi_state &state, simdjson::onde
 
 extern "C" {
     simdjson_ffi_state *simdjson_ffi_state_new() {
-        return new simdjson_ffi_state();
+        return new(nothrow) simdjson_ffi_state();
     }
 
     simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state) {
@@ -236,6 +236,9 @@ extern "C" {
 
             return SIMDJSON_FFI_ERROR;
         }
+
+        // we are done! clean up the tmp string to save memory
+        state->json = simdjson::padded_string();
 
         return state->ops_n;
     }
