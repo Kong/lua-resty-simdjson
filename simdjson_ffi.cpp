@@ -1,6 +1,11 @@
+/*
+ * Copyright 2023 Datong Sun (dndx@idndx.com)
+ * Dual licensed under the MIT License and Apache License Version 2.0
+ * See LICENSE-MIT and LICENSE-APACHE for more information
+ */
+
 #include "simdjson.h"
 #include "simdjson_ffi.h"
-#include <iostream>
 using namespace simdjson;
 using namespace std;
 
