@@ -91,14 +91,15 @@ Compared to [lua-cjcon](https://github.com/openresty/lua-cjson), which is by far
 commonly used JSON decoder in the OpenResty/LuaJIT ecosystem, lua-resty-simdjson significantly
 improves the proxy path latency when dealing with large JSON inputs when yielding is enabled.
 
-Due to the extremely high speed of simdjson and efficient data structure access between Lua
-and C land, the total decode time is also slightly faster than lua-cjson. During a benchmark
+Due to the extremely high speed of simdjson, efficient data structure stream from C land
+to Lua land and usage of LuaJIT FFI instead of Lua C API for table building,
+the total decode time is also slightly faster than lua-cjson. During a benchmark
 to decode [a 100MB JSON sample](https://github.com/seductiveapps/largeJSON/blob/master/100mb.json),
 lua-cjson took more than 400ms while lua-resty-simdjson
-finished decode in average 350ms (12% speedup) with yielding enabled.
+finished decode in average 350ms (12% speedup) even with yielding enabled.
 
-The proxy path latency during decode was measured to be 4ms instead of 420ms using [wrk2](https://github.com/giltene/wrk2)
-in constant throughput mode:
+The maximum proxy path latency during decode was measured to be 4ms instead of 420ms using [wrk2](https://github.com/giltene/wrk2)
+in constant throughput mode (99% reduction):
 
 ```shell
 # With lua-resty-simdjson
