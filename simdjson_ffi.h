@@ -7,15 +7,11 @@
 #ifndef SIMDJSON_FFI_H
 #define SIMDJSON_FFI_H
 
+#include <stack>
+
 
 #define SIMDJSON_FFI_BATCH_SIZE 2048
-#define SIMDJSON_FFI_STACK_SIZE 128
-
-
 #define SIMDJSON_FFI_ERROR      -1
-
-
-#include <stack>
 
 
 enum simdjson_ffi_opcode_t {
