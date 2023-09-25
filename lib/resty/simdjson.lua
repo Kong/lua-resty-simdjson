@@ -10,9 +10,18 @@ local ffi = require("ffi")
 local ffi_string = ffi.string
 local ffi_gc = ffi.gc
 local table_new = require("table.new")
+local table_isarray = require("table.isarray")
+local string_buffer = require("string.buffer")
 local assert = assert
 local error = error
+local tostring = tostring
+local ipairs = ipairs
+local pairs = pairs
+local type = type
 local setmetatable = setmetatable
+local string_byte = string.byte
+local string_sub = string.sub
+local string_char = string.char
 local null = ngx.null
 local ngx_sleep = ngx.sleep
 
@@ -94,6 +103,8 @@ local SIMDJSON_FFI_OPCODE_BOOLEAN = C.SIMDJSON_FFI_OPCODE_BOOLEAN
 local SIMDJSON_FFI_OPCODE_NULL = C.SIMDJSON_FFI_OPCODE_NULL
 local SIMDJSON_FFI_OPCODE_RETURN = C.SIMDJSON_FFI_OPCODE_RETURN
 local SIMDJSON_FFI_ERROR = -1
+
+
 local _MT = { __index = _M, }
 
 
@@ -296,6 +307,140 @@ function _M:decode(json)
     else
         assert(false)
     end
+end
+
+
+local encode_helper
+do
+    local ESCAPE_TABLE = {
+        "\\u0001", "\\u0002", "\\u0003",
+        "\\u0004", "\\u0005", "\\u0006", "\\u0007",
+        "\\b", "\\t", "\\n", "\\u000b",
+        "\\f", "\\r", "\\u000e", "\\u000f",
+        "\\u0010", "\\u0011", "\\u0012", "\\u0013",
+        "\\u0014", "\\u0015", "\\u0016", "\\u0017",
+        "\\u0018", "\\u0019", "\\u001a", "\\u001b",
+        "\\u001c", "\\u001d", "\\u001e", "\\u001f",
+        nil, nil, "\\\"", nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, "\\/",
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, "\\\\", nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, "\\u007f",
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, nil, nil,
+    }
+
+    ESCAPE_TABLE[0] = "\\u0000"
+
+    for i = 0, 255 do
+        if not ESCAPE_TABLE[i] then
+            ESCAPE_TABLE[i] = string_char(i)
+        end
+    end
+
+    function encode_helper(item, cb)
+        local typ = type(item)
+        if typ == "table" then
+            local comma = false
+
+            local is_array = table_isarray(item)
+
+            if is_array then
+                cb("[")
+                for _, v in ipairs(item) do
+                    if comma then
+                        cb(", ")
+                    end
+
+                    comma = true
+
+                    local res, err = encode_helper(v, cb)
+                    if not res then
+                        return nil, err
+                    end
+                end
+                cb("]")
+
+            else
+                cb("{")
+                for k, v in pairs(item) do
+                    if type(k) ~= "string" then
+                        return nil, "object keys must be strings"
+                    end
+
+                    if comma then
+                        cb(", ")
+                    end
+
+                    comma = true
+
+                    assert(encode_helper(k, cb))
+
+                    cb(":")
+
+                    local res, err = encode_helper(v, cb)
+                    if not res then
+                        return nil, err
+                    end
+                end
+                cb("}")
+            end
+
+        elseif typ == "string" then
+            cb("\"")
+            for i = 1, #item do
+                cb(ESCAPE_TABLE[string_byte(item, i)])
+            end
+            cb("\"")
+
+        elseif typ == "number" or typ == "boolean" then
+            cb(tostring(item))
+
+        elseif item == null then
+            cb("null")
+
+        else
+            return nil, "unsupported data type: " .. typ
+        end
+
+        return true
+    end
+end
+_M.encode_helper = encode_helper
+
+
+function _M.encode(item)
+    local buf = string_buffer.new()
+
+    local res, err = encode_helper(item, function(s)
+        buf:put(s)
+    end)
+    if not res then
+        return nil, err
+    end
+
+    return buf:tostring()
 end
 
 
