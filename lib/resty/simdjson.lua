@@ -439,7 +439,8 @@ function _M:encode(item)
 
         if self.yield then
             iterations = iterations + 1
-            if iterations % 2000 == 0 then
+            if iterations % 2048 == 0 then
+                iterations = 0
                 ngx_sleep(0)
             end
         end
