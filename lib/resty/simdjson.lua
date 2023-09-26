@@ -359,7 +359,7 @@ do
         end
     end
 
-    function encode_helper(item, cb)
+    function encode_helper(self, item, cb)
         local typ = type(item)
         if typ == "table" then
             local comma = false
@@ -375,7 +375,7 @@ do
 
                     comma = true
 
-                    local res, err = encode_helper(v, cb)
+                    local res, err = encode_helper(self, v, cb)
                     if not res then
                         return nil, err
                     end
@@ -395,11 +395,11 @@ do
 
                     comma = true
 
-                    assert(encode_helper(k, cb))
+                    assert(encode_helper(self, k, cb))
 
                     cb(":")
 
-                    local res, err = encode_helper(v, cb)
+                    local res, err = encode_helper(self, v, cb)
                     if not res then
                         return nil, err
                     end
@@ -430,11 +430,19 @@ end
 _M.encode_helper = encode_helper
 
 
-function _M.encode(item)
+function _M:encode(item)
     local buf = string_buffer.new()
+    local iterations = 0
 
-    local res, err = encode_helper(item, function(s)
+    local res, err = encode_helper(self, item, function(s)
         buf:put(s)
+
+        if self.yield then
+            iterations = iterations + 1
+            if iterations % 2000 == 0 then
+                ngx_sleep(0)
+            end
+        end
     end)
     if not res then
         return nil, err
