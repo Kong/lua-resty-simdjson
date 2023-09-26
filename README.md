@@ -88,7 +88,7 @@ concurrently.
 
 ## simdjson.encode
 
-**syntax:** *obj = parser:encode(obj)*
+**syntax:** *json = parser:encode(obj)*
 
 **context:** *any context*
 
@@ -105,7 +105,7 @@ encode to avoid high latencies caused by encoding a very large object.
 
 ## simdjson.encode\_helper
 
-**syntax:** *obj = parser:encode_helper(obj, cb)*
+**syntax:** *json = parser:encode_helper(obj, cb)*
 
 **context:** *any context*
 
@@ -180,6 +180,10 @@ Transfer/sec:    330.05KB
 The lua-resty-simdjson library will use more memory than lua-cjson during parsing due to various internal
 data structure simdjson allocates. The overhead is roughly equal to the size of the JSON string
 and can be freed immediately after parse with the `:destroy` method.
+
+Encode will use less memory than lua-cjson if you use the streaming method
+with [`:encode_helper`](#simdjsonencode_helper), or approximately same amount of memory with
+[`:encode`](#simdjsonencode).
 
 [Back to TOC](#table-of-contents)
 
