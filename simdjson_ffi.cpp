@@ -6,8 +6,9 @@
 
 #include "simdjson.h"
 #include "simdjson_ffi.h"
+
+
 using namespace simdjson;
-using namespace std;
 
 
 static bool simdjson_ffi_process_value(simdjson_ffi_state &state, simdjson::ondemand::value value) {
@@ -65,7 +66,7 @@ static bool simdjson_ffi_process_value(simdjson_ffi_state &state, simdjson::onde
 
 extern "C" {
     simdjson_ffi_state *simdjson_ffi_state_new() {
-        return new(nothrow) simdjson_ffi_state();
+        return new(std::nothrow) simdjson_ffi_state();
     }
 
     simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state) {
