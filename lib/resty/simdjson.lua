@@ -8,21 +8,16 @@ local _MT = { __index = _M, }
 
 
 local ffi = require("ffi")
-local ffi_string = ffi.string
-local ffi_gc = ffi.gc
 local table_new = require("table.new")
 local table_isarray = require("table.isarray")
 local string_buffer = require("string.buffer")
+
+
 local assert = assert
 local error = error
-local tostring = tostring
-local ipairs = ipairs
-local pairs = pairs
-local type = type
 local setmetatable = setmetatable
-local string_byte = string.byte
-local string_sub = string.sub
-local string_char = string.char
+local ffi_string = ffi.string
+local ffi_gc = ffi.gc
 local ngx_null = ngx.null
 local ngx_sleep = ngx.sleep
 
@@ -314,6 +309,13 @@ end
 
 local encode_helper
 do
+    local type = type
+    local pairs = pairs
+    local ipairs = ipairs
+    local tostring = tostring
+    local string_byte = string.byte
+    local string_char = string.char
+
     local ESCAPE_TABLE = {
         "\\u0001", "\\u0002", "\\u0003",
         "\\u0004", "\\u0005", "\\u0006", "\\u0007",
