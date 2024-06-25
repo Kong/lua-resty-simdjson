@@ -22,7 +22,7 @@ local setmetatable = setmetatable
 local string_byte = string.byte
 local string_sub = string.sub
 local string_char = string.char
-local null = ngx.null
+local ngx_null = ngx.null
 local ngx_sleep = ngx.sleep
 
 
@@ -182,7 +182,7 @@ function _M:_build_array()
 
             elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
                 n = n + 1
-                tbl[n] = null
+                tbl[n] = ngx_null
 
             else
                 assert(false)
@@ -249,7 +249,7 @@ function _M:_build_object()
                     tbl[key] = ops[self.ops_index - 1].size == 1
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
-                    tbl[key] = null
+                    tbl[key] = ngx_null
 
                 else
                     assert(false)
@@ -303,7 +303,7 @@ function _M:decode(json)
         return op.size == 1
 
     elseif op.opcode == SIMDJSON_FFI_OPCODE_NULL then
-        return null
+        return ngx_null
 
     else
         assert(false)
@@ -418,7 +418,7 @@ do
         elseif typ == "number" or typ == "boolean" then
             cb(tostring(item))
 
-        elseif item == null then
+        elseif item == ngx_null then
             cb("null")
 
         else
