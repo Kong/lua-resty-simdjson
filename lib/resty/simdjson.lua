@@ -13,6 +13,7 @@ local table_isarray = require("table.isarray")
 local string_buffer = require("string.buffer")
 
 
+local type = type
 local assert = assert
 local error = error
 local setmetatable = setmetatable
@@ -185,7 +186,7 @@ function _M:_build_array()
                 tbl[n] = ngx_null
 
             else
-                assert(false)
+                assert(false) -- never reach here
             end
         end
 
@@ -250,7 +251,7 @@ function _M:_build_object()
                     tbl[key] = ngx_null
 
                 else
-                    assert(false)
+                    assert(false) -- never reach here
                 end
 
                 key = nil
@@ -272,6 +273,8 @@ end
 
 
 function _M:decode(json)
+    assert(type(json) == "string")
+
     if not self.state then
         error("already destroyed", 2)
     end
@@ -302,14 +305,13 @@ function _M:decode(json)
         return ngx_null
 
     else
-        assert(false)
+        assert(false) -- never reach here
     end
 end
 
 
 local encode_helper
 do
-    local type = type
     local pairs = pairs
     local ipairs = ipairs
     local tostring = tostring
