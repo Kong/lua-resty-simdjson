@@ -14,23 +14,25 @@
 #define SIMDJSON_FFI_ERROR      -1
 
 
-typedef enum {
-    SIMDJSON_FFI_OPCODE_ARRAY = 0,
-    SIMDJSON_FFI_OPCODE_OBJECT,
-    SIMDJSON_FFI_OPCODE_NUMBER,
-    SIMDJSON_FFI_OPCODE_STRING,
-    SIMDJSON_FFI_OPCODE_BOOLEAN,
-    SIMDJSON_FFI_OPCODE_NULL,
-    SIMDJSON_FFI_OPCODE_RETURN
-} simdjson_ffi_opcode_e;
+extern "C" {
+    typedef enum {
+        SIMDJSON_FFI_OPCODE_ARRAY = 0,
+        SIMDJSON_FFI_OPCODE_OBJECT,
+        SIMDJSON_FFI_OPCODE_NUMBER,
+        SIMDJSON_FFI_OPCODE_STRING,
+        SIMDJSON_FFI_OPCODE_BOOLEAN,
+        SIMDJSON_FFI_OPCODE_NULL,
+        SIMDJSON_FFI_OPCODE_RETURN
+    } simdjson_ffi_opcode_e;
 
 
-typedef struct {
-    simdjson_ffi_opcode_e      opcode;
-    const char                *str;
-    uint32_t                   size;
-    double                     number;
-} simdjson_ffi_op_t;
+    typedef struct {
+        simdjson_ffi_opcode_e      opcode;
+        const char                *str;
+        uint32_t                   size;
+        double                     number;
+    } simdjson_ffi_op_t;
+}
 
 
 enum class simdjson_ffi_resume_state {

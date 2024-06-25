@@ -66,25 +66,26 @@ if not C then
 end
 
 ffi.cdef([[
-enum simdjson_ffi_opcode_t {
+typedef enum {
     SIMDJSON_FFI_OPCODE_ARRAY = 0,
     SIMDJSON_FFI_OPCODE_OBJECT,
     SIMDJSON_FFI_OPCODE_NUMBER,
     SIMDJSON_FFI_OPCODE_STRING,
     SIMDJSON_FFI_OPCODE_BOOLEAN,
     SIMDJSON_FFI_OPCODE_NULL,
-    SIMDJSON_FFI_OPCODE_RETURN,
-};
+    SIMDJSON_FFI_OPCODE_RETURN
+} simdjson_ffi_opcode_e;
+
 
 typedef struct {
-    enum simdjson_ffi_opcode_t opcode;
+    simdjson_ffi_opcode_e      opcode;
     const char                *str;
     uint32_t                   size;
     double                     number;
 } simdjson_ffi_op_t;
 
 
-typedef struct simdjson_ffi_state simdjson_ffi_state;
+typedef struct simdjson_ffi_state_t simdjson_ffi_state;
 
 
 simdjson_ffi_state *simdjson_ffi_state_new();
