@@ -198,7 +198,7 @@ function _M:_build_array()
 
         self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
-            return nil, "simdjson: error: ", ffi_string(errmsg[0])
+            return nil, "simdjson: error: " .. ffi_string(errmsg[0])
         end
 
         self.ops_index = 0
@@ -266,7 +266,7 @@ function _M:_build_object()
 
         self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
-            return nil, "simdjson: error: ", ffi_string(errmsg[0])
+            return nil, "simdjson: error: " .. ffi_string(errmsg[0])
         end
 
         self.ops_index = 0
@@ -283,7 +283,7 @@ function _M:decode(json)
 
     local res = C.simdjson_ffi_parse(self.state, json, #json, errmsg)
     if res == SIMDJSON_FFI_ERROR then
-        return nil, "simdjson: error: ", ffi_string(errmsg[0])
+        return nil, "simdjson: error: " .. ffi_string(errmsg[0])
     end
 
     local op = self.ops[0]
