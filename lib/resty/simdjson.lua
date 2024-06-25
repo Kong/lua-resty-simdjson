@@ -429,17 +429,20 @@ end
 _M.encode_helper = encode_helper
 
 
+local MAX_ITERATIONS = 2048
+
+
 function _M:encode(item)
     local buf = string_buffer.new()
-    local iterations = 0
+    local iterations = MAX_ITERATIONS
 
     local res, err = encode_helper(self, item, function(s)
         buf:put(s)
 
         if self.yieldable then
-            iterations = iterations + 1
-            if iterations % 2048 == 0 then
-                iterations = 0
+            iterations = iterations - 1
+            if iterations <= 0 then
+                iterations = MAX_ITERATIONS
                 ngx_sleep(0)
             end
         end
