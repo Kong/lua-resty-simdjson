@@ -11,10 +11,10 @@
 using namespace simdjson;
 
 
-static bool simdjson_ffi_process_value(simdjson_ffi_state &state, simdjson::ondemand::value value) {
+static bool simdjson_ffi_process_value(simdjson_ffi_state &state, ondemand::value value) {
     switch (value.type()) {
     case ondemand::json_type::array: {
-        simdjson::ondemand::array a = value;
+        ondemand::array a = value;
         state.frames.emplace(simdjson_ffi_resume_state::array, a.begin(), a.end());
 
         state.ops[state.ops_n++].opcode = SIMDJSON_FFI_OPCODE_ARRAY;
@@ -23,7 +23,7 @@ static bool simdjson_ffi_process_value(simdjson_ffi_state &state, simdjson::onde
     }
 
     case ondemand::json_type::object: {
-        simdjson::ondemand::object o = value;
+        ondemand::object o = value;
         state.frames.emplace(simdjson_ffi_resume_state::object, o.begin(), o.end());
 
         state.ops[state.ops_n++].opcode = SIMDJSON_FFI_OPCODE_OBJECT;
@@ -80,14 +80,14 @@ extern "C" {
 
     int simdjson_ffi_parse(simdjson_ffi_state *state, const char *json, size_t len, const char **errmsg) {
         try {
-            state->json = simdjson::padded_string(json, len);
+            state->json = padded_string(json, len);
 
             state->document = state->parser.iterate(state->json);
             state->ops_n = 0;
 
             switch (state->document.type()) {
             case ondemand::json_type::array: {
-                simdjson::ondemand::array a = state->document;
+                ondemand::array a = state->document;
                 state->frames.emplace(simdjson_ffi_resume_state::array, a.begin(), a.end());
 
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_ARRAY;
@@ -96,7 +96,7 @@ extern "C" {
             }
 
             case ondemand::json_type::object: {
-                simdjson::ondemand::object o = state->document;
+                ondemand::object o = state->document;
                 state->frames.emplace(simdjson_ffi_resume_state::object, o.begin(), o.end());
 
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_OBJECT;
@@ -167,7 +167,7 @@ extern "C" {
 
                         // resume array iteration
                         for (auto it = frame.it.array.current; it != frame.it.array.end; ++it) {
-                            simdjson::ondemand::value value = *it;
+                            ondemand::value value = *it;
 
                             if (simdjson_ffi_process_value(*state, value)) {
                                 // save state, go deeper
@@ -252,7 +252,7 @@ extern "C" {
         }
 
         // we are done! clean up the tmp string to save memory
-        state->json = simdjson::padded_string();
+        state->json = padded_string();
 
         return state->ops_n;
     }
