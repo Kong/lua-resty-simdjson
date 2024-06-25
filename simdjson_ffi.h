@@ -39,14 +39,12 @@ enum class simdjson_ffi_resume_state {
 };
 
 
-class simdjson_ffi_stack_frame {
-public:
+struct simdjson_ffi_stack_frame {
     simdjson_ffi_resume_state       state;
     bool                            processing;
 
     union it {
-        class array {
-            public:
+        struct array {
 
             simdjson::ondemand::array_iterator current;
             simdjson::ondemand::array_iterator end;
@@ -54,8 +52,7 @@ public:
             array(simdjson::ondemand::array_iterator current, simdjson::ondemand::array_iterator end): current(current), end(end) {}
         } array;
 
-        class object {
-            public:
+        struct object {
 
             simdjson::ondemand::object_iterator current;
             simdjson::ondemand::object_iterator end;
@@ -73,8 +70,7 @@ public:
 };
 
 
-class simdjson_ffi_state {
-public:
+struct simdjson_ffi_state_t {
     simdjson::ondemand::parser            parser;
     simdjson::ondemand::document          document;
     simdjson_ffi_op_t                     ops[SIMDJSON_FFI_BATCH_SIZE];
@@ -84,7 +80,7 @@ public:
 };
 
 
-typedef class simdjson_ffi_state simdjson_ffi_state;
+typedef struct simdjson_ffi_state_t simdjson_ffi_state;
 
 
 extern "C" {
