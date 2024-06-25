@@ -96,4 +96,4 @@ extern "C" {
 }
 
 
-#endif // !SIMDJSON_FFI_H
+#endif /* !SIMDJSON_FFI_H */
