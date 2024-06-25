@@ -414,6 +414,7 @@ do
             cb("\"")
 
         elseif typ == "number" or typ == "boolean" then
+            -- TODO: number's precision
             cb(tostring(item))
 
         elseif item == ngx_null then
