@@ -30,10 +30,11 @@ static bool simdjson_ffi_process_value(simdjson_ffi_state &state, simdjson::onde
         return true;
     }
 
-    case ondemand::json_type::number:
+    case ondemand::json_type::number: {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_NUMBER;
         state.ops[state.ops_n++].number = double(value);
         return false;
+    }
 
     case ondemand::json_type::string: {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_STRING;
@@ -44,16 +45,18 @@ static bool simdjson_ffi_process_value(simdjson_ffi_state &state, simdjson::onde
         return false;
     }
 
-    case ondemand::json_type::boolean:
+    case ondemand::json_type::boolean: {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_BOOLEAN;
         state.ops[state.ops_n++].size = bool(value);
         return false;
+    }
 
-    case ondemand::json_type::null:
+    case ondemand::json_type::null: {
         value.is_null();
 
         state.ops[state.ops_n++].opcode = SIMDJSON_FFI_OPCODE_NULL;
         return false;
+    }
 
     default:
         __builtin_unreachable();
@@ -100,10 +103,11 @@ extern "C" {
                 break;
             }
 
-            case ondemand::json_type::number:
+            case ondemand::json_type::number: {
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_NUMBER;
                 state->ops[state->ops_n].number = double(state->document);
                 break;
+            }
 
             case ondemand::json_type::string: {
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_STRING;
@@ -114,16 +118,18 @@ extern "C" {
                 break;
             }
 
-            case ondemand::json_type::boolean:
+            case ondemand::json_type::boolean: {
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_BOOLEAN;
                 state->ops[state->ops_n].size = bool(state->document);
                 break;
+            }
 
-            case ondemand::json_type::null:
+            case ondemand::json_type::null: {
                 state->document.is_null();
 
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_NULL;
                 break;
+            }
 
             default:
                 __builtin_unreachable();
@@ -152,7 +158,7 @@ extern "C" {
                 auto &frame = state->frames.top();
 
                 switch (frame.state) {
-                    case simdjson_ffi_resume_state::array:
+                    case simdjson_ffi_resume_state::array: {
                         if (frame.processing) {
                             ++frame.it.array.current;
                             frame.processing = false;
@@ -187,8 +193,9 @@ extern "C" {
                         }
 
                         break;
+                    }
 
-                    case simdjson_ffi_resume_state::object:
+                    case simdjson_ffi_resume_state::object: {
                         // resume object iteration
 
                         if (frame.processing) {
@@ -230,6 +237,7 @@ extern "C" {
                         }
 
                         break;
+                    }
 
                     default:
                         __builtin_unreachable();
