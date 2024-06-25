@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - main
-      - master
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -25,19 +24,19 @@ jobs:
 
     steps:
     - name: Checkout source code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     # Optional step to run on only changed files
     - name: Get changed files
       id: changed-files
-      uses: tj-actions/changed-files@54849deb963ca9f24185fb5de2965e002d066e6b # v37
+      uses: tj-actions/changed-files@635f118699dd888d737c15018cd30aff2e0274f8 # 44.0.1
       with:
         files: |
           **.lua
 
     - name: Lua Check
       if: steps.changed-files.outputs.any_changed == 'true'
-      uses: Kong/public-shared-actions/code-check-actions/lua-lint@33449c46c6766a3d3c8f167cc383381225862b36
+      uses: Kong/public-shared-actions/code-check-actions/lua-lint@v2
       with:
         additional_args: '--no-default-config --config .luacheckrc'
         files: ${{ steps.changed-files.outputs.all_changed_files }}

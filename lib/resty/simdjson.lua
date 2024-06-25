@@ -4,6 +4,7 @@
 
 
 local _M = {}
+local _MT = { __index = _M, }
 
 
 local ffi = require("ffi")
@@ -104,9 +105,6 @@ local SIMDJSON_FFI_OPCODE_BOOLEAN = C.SIMDJSON_FFI_OPCODE_BOOLEAN
 local SIMDJSON_FFI_OPCODE_NULL = C.SIMDJSON_FFI_OPCODE_NULL
 local SIMDJSON_FFI_OPCODE_RETURN = C.SIMDJSON_FFI_OPCODE_RETURN
 local SIMDJSON_FFI_ERROR = -1
-
-
-local _MT = { __index = _M, }
 
 
 local errmsg = require("resty.core.base").get_errmsg_ptr()
