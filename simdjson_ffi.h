@@ -49,21 +49,21 @@ struct simdjson_ffi_stack_frame {
     bool                            processing;
 
     union it {
-        struct array {
+        struct array_t {
 
             simdjson_array_iterator current;
             simdjson_array_iterator end;
 
-            array(simdjson_array_iterator current, simdjson_array_iterator end):
+            array_t(simdjson_array_iterator current, simdjson_array_iterator end):
                 current(current), end(end) {}
         } array;
 
-        struct object {
+        struct object_t {
 
             simdjson_object_iterator current;
             simdjson_object_iterator end;
 
-            object(simdjson_object_iterator current, simdjson_object_iterator end):
+            object_t(simdjson_object_iterator current, simdjson_object_iterator end):
                 current(current), end(end) {}
         } object;
 
