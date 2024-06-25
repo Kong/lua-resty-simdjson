@@ -110,6 +110,13 @@ local SIMDJSON_FFI_ERROR = -1
 local errmsg = require("resty.core.base").get_errmsg_ptr()
 
 
+local function yielding(enable)
+    if enable then
+        ngx_sleep(0)
+    end
+end
+
+
 function _M.new(yieldable)
     local state = C.simdjson_ffi_state_new()
     if state == nil then
@@ -187,9 +194,7 @@ function _M:_build_array()
             end
         end
 
-        if self.yieldable then
-            ngx_sleep(0)
-        end
+        yielding(self.yieldable)
 
         self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
@@ -257,9 +262,7 @@ function _M:_build_object()
             end
         end
 
-        if self.yieldable then
-            ngx_sleep(0)
-        end
+        yielding(self.yieldable)
 
         self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
@@ -444,7 +447,7 @@ function _M:encode(item)
             iterations = iterations - 1
             if iterations <= 0 then
                 iterations = MAX_ITERATIONS
-                ngx_sleep(0)
+                yielding(true)
             end
         end
     end)
