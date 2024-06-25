@@ -15,7 +15,7 @@ static bool simdjson_ffi_process_value(simdjson_ffi_state &state, ondemand::valu
     switch (value.type()) {
     case ondemand::json_type::array: {
         ondemand::array a = value;
-        state.frames.emplace(simdjson_ffi_resume_state::array, a.begin(), a.end());
+        state.frames.emplace(a.begin(), a.end());
 
         state.ops[state.ops_n++].opcode = SIMDJSON_FFI_OPCODE_ARRAY;
 
@@ -24,7 +24,7 @@ static bool simdjson_ffi_process_value(simdjson_ffi_state &state, ondemand::valu
 
     case ondemand::json_type::object: {
         ondemand::object o = value;
-        state.frames.emplace(simdjson_ffi_resume_state::object, o.begin(), o.end());
+        state.frames.emplace(o.begin(), o.end());
 
         state.ops[state.ops_n++].opcode = SIMDJSON_FFI_OPCODE_OBJECT;
 
@@ -88,7 +88,7 @@ extern "C" {
             switch (state->document.type()) {
             case ondemand::json_type::array: {
                 ondemand::array a = state->document;
-                state->frames.emplace(simdjson_ffi_resume_state::array, a.begin(), a.end());
+                state->frames.emplace(a.begin(), a.end());
 
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_ARRAY;
 
@@ -97,7 +97,7 @@ extern "C" {
 
             case ondemand::json_type::object: {
                 ondemand::object o = state->document;
-                state->frames.emplace(simdjson_ffi_resume_state::object, o.begin(), o.end());
+                state->frames.emplace(o.begin(), o.end());
 
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_OBJECT;
 

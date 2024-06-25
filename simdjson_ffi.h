@@ -71,11 +71,11 @@ struct simdjson_ffi_stack_frame {
         it(simdjson_object_iterator current, simdjson_object_iterator end): object(current, end) {}
     } it;
 
-    simdjson_ffi_stack_frame(simdjson_ffi_resume_state state, simdjson_array_iterator current, simdjson_array_iterator end):
-        state(state), processing(false), it(current, end) {}
+    simdjson_ffi_stack_frame(simdjson_array_iterator current, simdjson_array_iterator end):
+        state(simdjson_ffi_resume_state::array), processing(false), it(current, end) {}
 
-    simdjson_ffi_stack_frame(simdjson_ffi_resume_state state, simdjson_object_iterator current, simdjson_object_iterator end):
-        state(state), processing(false), it(current, end) {}
+    simdjson_ffi_stack_frame(simdjson_object_iterator current, simdjson_object_iterator end):
+        state(simdjson_ffi_resume_state::object), processing(false), it(current, end) {}
 };
 
 
