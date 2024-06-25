@@ -112,7 +112,7 @@ local _MT = { __index = _M, }
 local errmsg = require("resty.core.base").get_errmsg_ptr()
 
 
-function _M.new(yield)
+function _M.new(yieldable)
     local state = C.simdjson_ffi_state_new()
     if state == nil then
         return nil, "no memory"
@@ -124,7 +124,7 @@ function _M.new(yield)
         ops_size = 0,
         state = ffi_gc(state, C.simdjson_ffi_state_free),
         ops = C.simdjson_ffi_state_get_ops(state),
-        yield = yield,
+        yieldable = yieldable,
     }
 
     return setmetatable(self, _MT)
@@ -189,7 +189,7 @@ function _M:_build_array()
             end
         end
 
-        if self.yield then
+        if self.yieldable then
             ngx_sleep(0)
         end
 
@@ -259,7 +259,7 @@ function _M:_build_object()
             end
         end
 
-        if self.yield then
+        if self.yieldable then
             ngx_sleep(0)
         end
 
@@ -438,7 +438,7 @@ function _M:encode(item)
     local res, err = encode_helper(self, item, function(s)
         buf:put(s)
 
-        if self.yield then
+        if self.yieldable then
             iterations = iterations + 1
             if iterations % 2048 == 0 then
                 iterations = 0
