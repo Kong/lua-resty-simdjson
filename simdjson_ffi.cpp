@@ -59,7 +59,7 @@ static bool simdjson_ffi_process_value(simdjson_ffi_state &state, simdjson::onde
     }
 
     default:
-        __builtin_unreachable();
+        SIMDJSON_UNREACHABLE();
     }
 }
 
@@ -132,7 +132,7 @@ extern "C" {
             }
 
             default:
-                __builtin_unreachable();
+                SIMDJSON_UNREACHABLE();
             }
 
         } catch (simdjson_error &e) {
@@ -240,7 +240,7 @@ extern "C" {
                     }
 
                     default:
-                        __builtin_unreachable();
+                        SIMDJSON_UNREACHABLE();
                 }
             }
 
