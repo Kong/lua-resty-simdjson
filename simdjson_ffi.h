@@ -14,7 +14,7 @@
 #define SIMDJSON_FFI_ERROR      -1
 
 
-enum simdjson_ffi_opcode_t {
+typedef enum {
     SIMDJSON_FFI_OPCODE_ARRAY = 0,
     SIMDJSON_FFI_OPCODE_OBJECT,
     SIMDJSON_FFI_OPCODE_NUMBER,
@@ -22,11 +22,11 @@ enum simdjson_ffi_opcode_t {
     SIMDJSON_FFI_OPCODE_BOOLEAN,
     SIMDJSON_FFI_OPCODE_NULL,
     SIMDJSON_FFI_OPCODE_RETURN
-};
+} simdjson_ffi_opcode_e;
 
 
 typedef struct {
-    enum simdjson_ffi_opcode_t opcode;
+    simdjson_ffi_opcode_e      opcode;
     const char                *str;
     uint32_t                   size;
     double                     number;
