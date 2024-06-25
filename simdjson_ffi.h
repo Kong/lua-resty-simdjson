@@ -35,7 +35,7 @@ extern "C" {
 }
 
 
-enum class simdjson_ffi_resume_state {
+enum class simdjson_ffi_resume_state : unsigned char {
     array,
     object
 };
