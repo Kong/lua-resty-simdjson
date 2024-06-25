@@ -26,3 +26,6 @@ libsimdjson_ffi.o: simdjson_ffi.cpp simdjson_ffi.h
 
 clean:
 	rm -f *.o *.so
+
+test: build
+	PATH=$(OPENRESTY_PREFIX)/nginx/sbin:$$PATH prove -r t/
