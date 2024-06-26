@@ -126,7 +126,7 @@ extern "C" {
             }
 
             case ondemand::json_type::null: {
-                state->document.is_null();
+                SIMDJSON_DEVELOPMENT_ASSERT(state->document.is_null());
 
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_NULL;
                 break;
