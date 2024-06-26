@@ -53,7 +53,7 @@ static bool simdjson_ffi_process_value(simdjson_ffi_state &state, ondemand::valu
     }
 
     case ondemand::json_type::null: {
-        value.is_null();
+        SIMDJSON_DEVELOPMENT_ASSERT(value.is_null());
 
         state.ops[state.ops_n++].opcode = SIMDJSON_FFI_OPCODE_NULL;
         return false;

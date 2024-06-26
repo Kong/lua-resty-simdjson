@@ -376,7 +376,7 @@ do
                 cb("[")
                 for _, v in ipairs(item) do
                     if comma then
-                        cb(", ")
+                        cb(",")
                     end
 
                     comma = true
