@@ -396,7 +396,7 @@ do
                     end
 
                     if comma then
-                        cb(", ")
+                        cb(",")
                     end
 
                     comma = true
