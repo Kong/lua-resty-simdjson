@@ -9,7 +9,6 @@ local _MT = { __index = _M, }
 
 local ffi = require("ffi")
 local table_new = require("table.new")
-local table_isarray = require("table.isarray")
 local string_buffer = require("string.buffer")
 
 
@@ -317,6 +316,7 @@ do
     local tostring = tostring
     local string_byte = string.byte
     local string_char = string.char
+    local table_isarray = require("table.isarray")
 
     local ESCAPE_TABLE = {
         "\\u0001", "\\u0002", "\\u0003",
