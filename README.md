@@ -134,7 +134,7 @@ some yielding inside the callback. See the source code of [`:encode()`](#simdjso
 # Performance characteristics
 
 ## Speed & Latency
-Compared to [lua-cjcon](https://github.com/openresty/lua-cjson), which is by far the most
+Compared to [lua-cjson](https://github.com/openresty/lua-cjson), which is by far the most
 commonly used JSON decoder in the OpenResty/LuaJIT ecosystem, lua-resty-simdjson significantly
 improves the proxy path latency when dealing with large JSON inputs when yielding is enabled.
 

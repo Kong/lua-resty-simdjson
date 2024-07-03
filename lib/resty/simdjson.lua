@@ -4,25 +4,21 @@
 
 
 local _M = {}
+local _MT = { __index = _M, }
 
 
 local ffi = require("ffi")
-local ffi_string = ffi.string
-local ffi_gc = ffi.gc
 local table_new = require("table.new")
-local table_isarray = require("table.isarray")
 local string_buffer = require("string.buffer")
+
+
+local type = type
 local assert = assert
 local error = error
-local tostring = tostring
-local ipairs = ipairs
-local pairs = pairs
-local type = type
 local setmetatable = setmetatable
-local string_byte = string.byte
-local string_sub = string.sub
-local string_char = string.char
-local null = ngx.null
+local ffi_string = ffi.string
+local ffi_gc = ffi.gc
+local ngx_null = ngx.null
 local ngx_sleep = ngx.sleep
 
 
@@ -66,25 +62,26 @@ if not C then
 end
 
 ffi.cdef([[
-enum simdjson_ffi_opcode_t {
+typedef enum {
     SIMDJSON_FFI_OPCODE_ARRAY = 0,
     SIMDJSON_FFI_OPCODE_OBJECT,
     SIMDJSON_FFI_OPCODE_NUMBER,
     SIMDJSON_FFI_OPCODE_STRING,
     SIMDJSON_FFI_OPCODE_BOOLEAN,
     SIMDJSON_FFI_OPCODE_NULL,
-    SIMDJSON_FFI_OPCODE_RETURN,
-};
+    SIMDJSON_FFI_OPCODE_RETURN
+} simdjson_ffi_opcode_e;
+
 
 typedef struct {
-    enum simdjson_ffi_opcode_t opcode;
+    simdjson_ffi_opcode_e      opcode;
     const char                *str;
     uint32_t                   size;
     double                     number;
 } simdjson_ffi_op_t;
 
 
-typedef struct simdjson_ffi_state simdjson_ffi_state;
+typedef struct simdjson_ffi_state_t simdjson_ffi_state;
 
 
 simdjson_ffi_state *simdjson_ffi_state_new();
@@ -105,13 +102,17 @@ local SIMDJSON_FFI_OPCODE_RETURN = C.SIMDJSON_FFI_OPCODE_RETURN
 local SIMDJSON_FFI_ERROR = -1
 
 
-local _MT = { __index = _M, }
-
-
 local errmsg = require("resty.core.base").get_errmsg_ptr()
 
 
-function _M.new(yield)
+local function yielding(enable)
+    if enable then
+        ngx_sleep(0)
+    end
+end
+
+
+function _M.new(yieldable)
     local state = C.simdjson_ffi_state_new()
     if state == nil then
         return nil, "no memory"
@@ -123,7 +124,7 @@ function _M.new(yield)
         ops_size = 0,
         state = ffi_gc(state, C.simdjson_ffi_state_free),
         ops = C.simdjson_ffi_state_get_ops(state),
-        yield = yield,
+        yieldable = yieldable,
     }
 
     return setmetatable(self, _MT)
@@ -181,20 +182,18 @@ function _M:_build_array()
 
             elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
                 n = n + 1
-                tbl[n] = null
+                tbl[n] = ngx_null
 
             else
-                assert(false)
+                assert(false) -- never reach here
             end
         end
 
-        if self.yield then
-            ngx_sleep(0)
-        end
+        yielding(self.yieldable)
 
         self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
-            return nil, "simdjson: error: ", ffi_string(errmsg[0])
+            return nil, "simdjson: error: " .. ffi_string(errmsg[0])
         end
 
         self.ops_index = 0
@@ -248,23 +247,21 @@ function _M:_build_object()
                     tbl[key] = ops[self.ops_index - 1].size == 1
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
-                    tbl[key] = null
+                    tbl[key] = ngx_null
 
                 else
-                    assert(false)
+                    assert(false) -- never reach here
                 end
 
                 key = nil
             end
         end
 
-        if self.yield then
-            ngx_sleep(0)
-        end
+        yielding(self.yieldable)
 
         self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
-            return nil, "simdjson: error: ", ffi_string(errmsg[0])
+            return nil, "simdjson: error: " .. ffi_string(errmsg[0])
         end
 
         self.ops_index = 0
@@ -275,13 +272,15 @@ end
 
 
 function _M:decode(json)
+    assert(type(json) == "string")
+
     if not self.state then
         error("already destroyed", 2)
     end
 
     local res = C.simdjson_ffi_parse(self.state, json, #json, errmsg)
     if res == SIMDJSON_FFI_ERROR then
-        return nil, "simdjson: error: ", ffi_string(errmsg[0])
+        return nil, "simdjson: error: " .. ffi_string(errmsg[0])
     end
 
     local op = self.ops[0]
@@ -302,16 +301,23 @@ function _M:decode(json)
         return op.size == 1
 
     elseif op.opcode == SIMDJSON_FFI_OPCODE_NULL then
-        return null
+        return ngx_null
 
     else
-        assert(false)
+        assert(false) -- never reach here
     end
 end
 
 
 local encode_helper
 do
+    local pairs = pairs
+    local ipairs = ipairs
+    local tostring = tostring
+    local string_byte = string.byte
+    local string_char = string.char
+    local table_isarray = require("table.isarray")
+
     local ESCAPE_TABLE = {
         "\\u0001", "\\u0002", "\\u0003",
         "\\u0004", "\\u0005", "\\u0006", "\\u0007",
@@ -370,7 +376,7 @@ do
                 cb("[")
                 for _, v in ipairs(item) do
                     if comma then
-                        cb(", ")
+                        cb(",")
                     end
 
                     comma = true
@@ -390,7 +396,7 @@ do
                     end
 
                     if comma then
-                        cb(", ")
+                        cb(",")
                     end
 
                     comma = true
@@ -415,9 +421,10 @@ do
             cb("\"")
 
         elseif typ == "number" or typ == "boolean" then
+            -- TODO: number's precision
             cb(tostring(item))
 
-        elseif item == null then
+        elseif item == ngx_null then
             cb("null")
 
         else
@@ -430,18 +437,21 @@ end
 _M.encode_helper = encode_helper
 
 
+local MAX_ITERATIONS = 2048
+
+
 function _M:encode(item)
     local buf = string_buffer.new()
-    local iterations = 0
+    local iterations = MAX_ITERATIONS
 
     local res, err = encode_helper(self, item, function(s)
         buf:put(s)
 
-        if self.yield then
-            iterations = iterations + 1
-            if iterations % 2048 == 0 then
-                iterations = 0
-                ngx_sleep(0)
+        if self.yieldable then
+            iterations = iterations - 1
+            if iterations <= 0 then
+                iterations = MAX_ITERATIONS
+                yielding(true)
             end
         end
     end)

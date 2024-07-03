@@ -6,15 +6,16 @@
 
 #include "simdjson.h"
 #include "simdjson_ffi.h"
+
+
 using namespace simdjson;
-using namespace std;
 
 
-static bool simdjson_ffi_process_value(simdjson_ffi_state &state, simdjson::ondemand::value value) {
+static bool simdjson_ffi_process_value(simdjson_ffi_state &state, ondemand::value value) {
     switch (value.type()) {
     case ondemand::json_type::array: {
-        simdjson::ondemand::array a = value;
-        state.frames.emplace(simdjson_ffi_resume_state::array, a.begin(), a.end());
+        ondemand::array a = value;
+        state.frames.emplace(a.begin(), a.end());
 
         state.ops[state.ops_n++].opcode = SIMDJSON_FFI_OPCODE_ARRAY;
 
@@ -22,18 +23,19 @@ static bool simdjson_ffi_process_value(simdjson_ffi_state &state, simdjson::onde
     }
 
     case ondemand::json_type::object: {
-        simdjson::ondemand::object o = value;
-        state.frames.emplace(simdjson_ffi_resume_state::object, o.begin(), o.end());
+        ondemand::object o = value;
+        state.frames.emplace(o.begin(), o.end());
 
         state.ops[state.ops_n++].opcode = SIMDJSON_FFI_OPCODE_OBJECT;
 
         return true;
     }
 
-    case ondemand::json_type::number:
+    case ondemand::json_type::number: {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_NUMBER;
         state.ops[state.ops_n++].number = double(value);
         return false;
+    }
 
     case ondemand::json_type::string: {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_STRING;
@@ -44,25 +46,27 @@ static bool simdjson_ffi_process_value(simdjson_ffi_state &state, simdjson::onde
         return false;
     }
 
-    case ondemand::json_type::boolean:
+    case ondemand::json_type::boolean: {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_BOOLEAN;
         state.ops[state.ops_n++].size = bool(value);
         return false;
+    }
 
-    case ondemand::json_type::null:
-        value.is_null();
+    case ondemand::json_type::null: {
+        SIMDJSON_DEVELOPMENT_ASSERT(value.is_null());
 
         state.ops[state.ops_n++].opcode = SIMDJSON_FFI_OPCODE_NULL;
         return false;
+    }
 
     default:
-        __builtin_unreachable();
+        SIMDJSON_UNREACHABLE();
     }
 }
 
 extern "C" {
     simdjson_ffi_state *simdjson_ffi_state_new() {
-        return new(nothrow) simdjson_ffi_state();
+        return new(std::nothrow) simdjson_ffi_state();
     }
 
     simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state) {
@@ -76,15 +80,15 @@ extern "C" {
 
     int simdjson_ffi_parse(simdjson_ffi_state *state, const char *json, size_t len, const char **errmsg) {
         try {
-            state->json = simdjson::padded_string(json, len);
+            state->json = padded_string(json, len);
 
             state->document = state->parser.iterate(state->json);
             state->ops_n = 0;
 
             switch (state->document.type()) {
             case ondemand::json_type::array: {
-                simdjson::ondemand::array a = state->document;
-                state->frames.emplace(simdjson_ffi_resume_state::array, a.begin(), a.end());
+                ondemand::array a = state->document;
+                state->frames.emplace(a.begin(), a.end());
 
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_ARRAY;
 
@@ -92,18 +96,19 @@ extern "C" {
             }
 
             case ondemand::json_type::object: {
-                simdjson::ondemand::object o = state->document;
-                state->frames.emplace(simdjson_ffi_resume_state::object, o.begin(), o.end());
+                ondemand::object o = state->document;
+                state->frames.emplace(o.begin(), o.end());
 
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_OBJECT;
 
                 break;
             }
 
-            case ondemand::json_type::number:
+            case ondemand::json_type::number: {
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_NUMBER;
                 state->ops[state->ops_n].number = double(state->document);
                 break;
+            }
 
             case ondemand::json_type::string: {
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_STRING;
@@ -114,19 +119,21 @@ extern "C" {
                 break;
             }
 
-            case ondemand::json_type::boolean:
+            case ondemand::json_type::boolean: {
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_BOOLEAN;
                 state->ops[state->ops_n].size = bool(state->document);
                 break;
+            }
 
-            case ondemand::json_type::null:
-                state->document.is_null();
+            case ondemand::json_type::null: {
+                SIMDJSON_DEVELOPMENT_ASSERT(state->document.is_null());
 
                 state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_NULL;
                 break;
+            }
 
             default:
-                __builtin_unreachable();
+                SIMDJSON_UNREACHABLE();
             }
 
         } catch (simdjson_error &e) {
@@ -152,7 +159,7 @@ extern "C" {
                 auto &frame = state->frames.top();
 
                 switch (frame.state) {
-                    case simdjson_ffi_resume_state::array:
+                    case simdjson_ffi_resume_state::array: {
                         if (frame.processing) {
                             ++frame.it.array.current;
                             frame.processing = false;
@@ -160,7 +167,7 @@ extern "C" {
 
                         // resume array iteration
                         for (auto it = frame.it.array.current; it != frame.it.array.end; ++it) {
-                            simdjson::ondemand::value value = *it;
+                            ondemand::value value = *it;
 
                             if (simdjson_ffi_process_value(*state, value)) {
                                 // save state, go deeper
@@ -187,8 +194,9 @@ extern "C" {
                         }
 
                         break;
+                    }
 
-                    case simdjson_ffi_resume_state::object:
+                    case simdjson_ffi_resume_state::object: {
                         // resume object iteration
 
                         if (frame.processing) {
@@ -230,9 +238,10 @@ extern "C" {
                         }
 
                         break;
+                    }
 
                     default:
-                        __builtin_unreachable();
+                        SIMDJSON_UNREACHABLE();
                 }
             }
 
@@ -243,7 +252,7 @@ extern "C" {
         }
 
         // we are done! clean up the tmp string to save memory
-        state->json = simdjson::padded_string();
+        state->json = padded_string();
 
         return state->ops_n;
     }

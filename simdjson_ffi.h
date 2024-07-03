@@ -14,67 +14,72 @@
 #define SIMDJSON_FFI_ERROR      -1
 
 
-enum simdjson_ffi_opcode_t {
-    SIMDJSON_FFI_OPCODE_ARRAY = 0,
-    SIMDJSON_FFI_OPCODE_OBJECT,
-    SIMDJSON_FFI_OPCODE_NUMBER,
-    SIMDJSON_FFI_OPCODE_STRING,
-    SIMDJSON_FFI_OPCODE_BOOLEAN,
-    SIMDJSON_FFI_OPCODE_NULL,
-    SIMDJSON_FFI_OPCODE_RETURN,
-};
+extern "C" {
+    typedef enum {
+        SIMDJSON_FFI_OPCODE_ARRAY = 0,
+        SIMDJSON_FFI_OPCODE_OBJECT,
+        SIMDJSON_FFI_OPCODE_NUMBER,
+        SIMDJSON_FFI_OPCODE_STRING,
+        SIMDJSON_FFI_OPCODE_BOOLEAN,
+        SIMDJSON_FFI_OPCODE_NULL,
+        SIMDJSON_FFI_OPCODE_RETURN
+    } simdjson_ffi_opcode_e;
 
 
-typedef struct {
-    enum simdjson_ffi_opcode_t opcode;
-    const char                *str;
-    uint32_t                   size;
-    double                     number;
-} simdjson_ffi_op_t;
+    typedef struct {
+        simdjson_ffi_opcode_e      opcode;
+        const char                *str;
+        uint32_t                   size;
+        double                     number;
+    } simdjson_ffi_op_t;
+}
 
 
-enum class simdjson_ffi_resume_state {
+enum class simdjson_ffi_resume_state : unsigned char {
     array,
     object
 };
 
 
-class simdjson_ffi_stack_frame {
-public:
+struct simdjson_ffi_stack_frame {
+    typedef simdjson::ondemand::array_iterator  simdjson_array_iterator;
+    typedef simdjson::ondemand::object_iterator simdjson_object_iterator;
+
     simdjson_ffi_resume_state       state;
     bool                            processing;
 
     union it {
-        class array {
-            public:
+        struct array_t {
 
-            simdjson::ondemand::array_iterator current;
-            simdjson::ondemand::array_iterator end;
+            simdjson_array_iterator current;
+            simdjson_array_iterator end;
 
-            array(simdjson::ondemand::array_iterator current, simdjson::ondemand::array_iterator end): current(current), end(end) {}
+            array_t(simdjson_array_iterator current, simdjson_array_iterator end):
+                current(current), end(end) {}
         } array;
 
-        class object {
-            public:
+        struct object_t {
 
-            simdjson::ondemand::object_iterator current;
-            simdjson::ondemand::object_iterator end;
+            simdjson_object_iterator current;
+            simdjson_object_iterator end;
 
-            object(simdjson::ondemand::object_iterator current, simdjson::ondemand::object_iterator end): current(current), end(end) {}
+            object_t(simdjson_object_iterator current, simdjson_object_iterator end):
+                current(current), end(end) {}
         } object;
 
-        it(simdjson::ondemand::array_iterator current, simdjson::ondemand::array_iterator end): array(current, end) {}
-        it(simdjson::ondemand::object_iterator current, simdjson::ondemand::object_iterator end): object(current, end) {}
+        it(simdjson_array_iterator current, simdjson_array_iterator end): array(current, end) {}
+        it(simdjson_object_iterator current, simdjson_object_iterator end): object(current, end) {}
     } it;
 
-    simdjson_ffi_stack_frame(simdjson_ffi_resume_state state, simdjson::ondemand::array_iterator current, simdjson::ondemand::array_iterator end): state(state), processing(false), it(current, end) {}
+    simdjson_ffi_stack_frame(simdjson_array_iterator current, simdjson_array_iterator end):
+        state(simdjson_ffi_resume_state::array), processing(false), it(current, end) {}
 
-    simdjson_ffi_stack_frame(simdjson_ffi_resume_state state, simdjson::ondemand::object_iterator current, simdjson::ondemand::object_iterator end): state(state), processing(false), it(current, end) {}
+    simdjson_ffi_stack_frame(simdjson_object_iterator current, simdjson_object_iterator end):
+        state(simdjson_ffi_resume_state::object), processing(false), it(current, end) {}
 };
 
 
-class simdjson_ffi_state {
-public:
+struct simdjson_ffi_state_t {
     simdjson::ondemand::parser            parser;
     simdjson::ondemand::document          document;
     simdjson_ffi_op_t                     ops[SIMDJSON_FFI_BATCH_SIZE];
@@ -84,16 +89,7 @@ public:
 };
 
 
-typedef class simdjson_ffi_state simdjson_ffi_state;
+typedef struct simdjson_ffi_state_t simdjson_ffi_state;
 
 
-extern "C" {
-    simdjson_ffi_state *simdjson_ffi_state_new();
-    simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state);
-    void simdjson_ffi_state_free(simdjson_ffi_state *state);
-    int simdjson_ffi_parse(simdjson_ffi_state *state, const char *json, size_t len, const char **errmsg);
-    int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg);
-}
-
-
-#endif // !SIMDJSON_FFI_H
+#endif /* !SIMDJSON_FFI_H */
