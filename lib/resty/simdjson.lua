@@ -151,7 +151,7 @@ function _M:_build_array()
         error("already destroyed", 2)
     end
 
-    local n = 0
+    local n = 1
     local tbl = table_new(4, 0)
     local ops = self.ops
 
@@ -167,32 +167,28 @@ function _M:_build_array()
             end
 
             if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
-                n = n + 1
                 tbl[n] = self:_build_array()
 
             elseif opcode == SIMDJSON_FFI_OPCODE_OBJECT then
-                n = n + 1
                 tbl[n] = self:_build_object()
 
             elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
-                n = n + 1
-                tbl[n] = ops[self.ops_index - 1].number
+                tbl[n] = ops[ops_index].number
 
             elseif opcode == SIMDJSON_FFI_OPCODE_STRING then
-                n = n + 1
                 tbl[n] = ffi_string(ops[ops_index].str, ops[ops_index].size)
 
             elseif opcode == SIMDJSON_FFI_OPCODE_BOOLEAN then
-                n = n + 1
                 tbl[n] = ops[ops_index].size == 1
 
             elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
-                n = n + 1
                 tbl[n] = ngx_null
 
             else
                 assert(false) -- never reach here
             end
+
+            n = n + 1
         end
 
         yielding(self.yieldable)
