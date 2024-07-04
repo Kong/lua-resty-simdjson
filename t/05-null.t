@@ -44,8 +44,9 @@ __DATA__
     }
 --- request
 GET /t
---- no_error_log
+--- response_body
 ok
+--- no_error_log
 [error]
 [warn]
 [crit]
