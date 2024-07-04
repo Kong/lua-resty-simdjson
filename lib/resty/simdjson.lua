@@ -159,8 +159,8 @@ function _M:_build_array()
     repeat
         while self.ops_index < self.ops_size do
             local ops_index = self.ops_index
-            local ops = ops[ops_index]
-            local opcode = ops.opcode
+            local op = ops[ops_index]
+            local opcode = op.opcode
 
             self.ops_index = ops_index + 1
 
@@ -175,13 +175,13 @@ function _M:_build_array()
                 tbl[n] = self:_build_object()
 
             elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
-                tbl[n] = ops.number
+                tbl[n] = op.number
 
             elseif opcode == SIMDJSON_FFI_OPCODE_STRING then
-                tbl[n] = ffi_string(ops.str, ops.size)
+                tbl[n] = ffi_string(op.str, op.size)
 
             elseif opcode == SIMDJSON_FFI_OPCODE_BOOLEAN then
-                tbl[n] = ops.size == 1
+                tbl[n] = op.size == 1
 
             elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
                 tbl[n] = ngx_null
@@ -220,8 +220,8 @@ function _M:_build_object()
     repeat
         while self.ops_index < self.ops_size do
             local ops_index = self.ops_index
-            local ops = ops[ops_index]
-            local opcode = ops.opcode
+            local op = ops[ops_index]
+            local opcode = op.opcode
 
             self.ops_index = ops_index + 1
 
@@ -235,7 +235,7 @@ function _M:_build_object()
             if not key then
                 -- object key must be string
                 assert(opcode == SIMDJSON_FFI_OPCODE_STRING)
-                key = ffi_string(ops.str, ops.size)
+                key = ffi_string(op.str, op.size)
 
             else
                 -- value
@@ -246,13 +246,13 @@ function _M:_build_object()
                     tbl[key] = self:_build_object()
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
-                    tbl[key] = ops.number
+                    tbl[key] = op.number
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_STRING then
-                    tbl[key] = ffi_string(ops.str, ops.size)
+                    tbl[key] = ffi_string(op.str, op.size)
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_BOOLEAN then
-                    tbl[key] = ops.size == 1
+                    tbl[key] = op.size == 1
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
                     tbl[key] = ngx_null
