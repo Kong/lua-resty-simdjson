@@ -157,8 +157,8 @@ function _M:_build_array()
 
     repeat
         while self.ops_index < self.ops_size do
-            local opcode = ops[self.ops_index].opcode
             local ops_index = self.ops_index
+            local opcode = ops[ops_index].opcode
 
             self.ops_index = ops_index + 1
 
@@ -216,8 +216,8 @@ function _M:_build_object()
 
     repeat
         while self.ops_index < self.ops_size do
-            local opcode = ops[self.ops_index].opcode
             local ops_index = self.ops_index
+            local opcode = ops[ops_index].opcode
 
             self.ops_index = ops_index + 1
 
