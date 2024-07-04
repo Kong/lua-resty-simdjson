@@ -1,0 +1,62 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-20.04
+
+    strategy:
+      matrix:
+        include:
+        # TODO: arm64
+        - openresty: "1.21.4.3"
+        - openresty: "1.25.3.1"
+
+    env:
+      JOBS: 1
+
+      OPENRESTY: ${{ matrix.openresty }}
+      CODE_PATH: ${{ github.workspace }}
+      BASE_PATH: /home/runner/work/cache
+
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'true'
+
+    - name: Setup cache
+      uses: actions/cache@v2
+      id: cache-deps
+      with:
+        path: |
+          /home/runner/work/cache
+        key: ${{ runner.os }}-${{ hashFiles('**/tests.yml') }}-${{ hashFiles('**/*.cpp', '**/*.h') }}-openresty-${{ matrix.openresty }}
+
+    - name: Install packages
+      run: |
+        sudo apt update
+        sudo apt-get install -qq -y wget cpanminus net-tools libpcre3-dev build-essential valgrind
+        if [ ! -e perl ]; then sudo cpanm --notest Test::Nginx > build.log 2>&1 || (cat build.log && exit 1); cp -r /usr/local/share/perl/ .; else sudo cp -r perl /usr/local/share; fi
+
+    - name: Download OpenResty
+      if: steps.cache-deps.outputs.cache-hit != 'true'
+      run: |
+        wget https://openresty.org/download/openresty-${OPENRESTY}.tar.gz
+        mkdir -p ${BASE_PATH}
+        tar xfz openresty-${OPENRESTY}.tar.gz -C ${BASE_PATH}
+
+    - name: Setup tools
+      if: steps.cache-deps.outputs.cache-hit != 'true'
+      run: |
+        cd ${BASE_PATH}/openresty-${OPENRESTY}
+        ./configure --prefix=${BASE_PATH}/openresty --with-debug
+        make && make install
+
+    - name: Run Test
+      run: |
+        export PATH=${BASE_PATH}/openresty/bin:$PATH
+        openresty -V
+        make test OPENRESTY_PREFIX=${BASE_PATH}/openresty
