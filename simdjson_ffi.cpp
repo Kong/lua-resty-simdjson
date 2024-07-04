@@ -11,7 +11,9 @@
 using namespace simdjson;
 
 
-static bool simdjson_ffi_process_value(simdjson_ffi_state &state, ondemand::value value) {
+// T may be ondemand::value or state->document
+template<typename T>
+static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
     switch (value.type()) {
     case ondemand::json_type::array: {
         ondemand::array a = value;
@@ -64,6 +66,7 @@ static bool simdjson_ffi_process_value(simdjson_ffi_state &state, ondemand::valu
     }
 }
 
+
 extern "C" {
     simdjson_ffi_state *simdjson_ffi_state_new() {
         return new(std::nothrow) simdjson_ffi_state();
@@ -85,56 +88,7 @@ extern "C" {
             state->document = state->parser.iterate(state->json);
             state->ops_n = 0;
 
-            switch (state->document.type()) {
-            case ondemand::json_type::array: {
-                ondemand::array a = state->document;
-                state->frames.emplace(a.begin(), a.end());
-
-                state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_ARRAY;
-
-                break;
-            }
-
-            case ondemand::json_type::object: {
-                ondemand::object o = state->document;
-                state->frames.emplace(o.begin(), o.end());
-
-                state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_OBJECT;
-
-                break;
-            }
-
-            case ondemand::json_type::number: {
-                state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_NUMBER;
-                state->ops[state->ops_n].number = double(state->document);
-                break;
-            }
-
-            case ondemand::json_type::string: {
-                state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_STRING;
-                std::string_view str = state->document;
-
-                state->ops[state->ops_n].str = str.data();
-                state->ops[state->ops_n].size = str.size();
-                break;
-            }
-
-            case ondemand::json_type::boolean: {
-                state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_BOOLEAN;
-                state->ops[state->ops_n].size = bool(state->document);
-                break;
-            }
-
-            case ondemand::json_type::null: {
-                SIMDJSON_DEVELOPMENT_ASSERT(state->document.is_null());
-
-                state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_NULL;
-                break;
-            }
-
-            default:
-                SIMDJSON_UNREACHABLE();
-            }
+            simdjson_process_value(*state, state->document);
 
         } catch (simdjson_error &e) {
             *errmsg = e.what();
@@ -169,7 +123,7 @@ extern "C" {
                         for (auto it = frame.it.array.current; it != frame.it.array.end; ++it) {
                             ondemand::value value = *it;
 
-                            if (simdjson_ffi_process_value(*state, value)) {
+                            if (simdjson_process_value(*state, value)) {
                                 // save state, go deeper
                                 frame.it.array.current = it;
                                 frame.processing = true;
@@ -215,7 +169,7 @@ extern "C" {
                             // this can not overflow, because we checked to make sure
                             // ops has at least 2 empty slots above
 
-                            if (simdjson_ffi_process_value(*state, field.value())) {
+                            if (simdjson_process_value(*state, field.value())) {
                                 // save state, go deeper
                                 frame.it.object.current = it;
                                 frame.processing = true;
