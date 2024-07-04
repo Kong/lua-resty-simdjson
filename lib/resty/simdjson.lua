@@ -154,6 +154,7 @@ function _M:_build_array()
     local n = 1
     local tbl = table_new(4, 0)
     local ops = self.ops
+    local yieldable = self.yieldable
 
     repeat
         while self.ops_index < self.ops_size do
@@ -191,7 +192,7 @@ function _M:_build_array()
             n = n + 1
         end
 
-        yielding(self.yieldable)
+        yielding(yieldable)
 
         self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
@@ -213,6 +214,7 @@ function _M:_build_object()
     local tbl = table_new(0, 4)
     local key
     local ops = self.ops
+    local yieldable = self.yieldable
 
     repeat
         while self.ops_index < self.ops_size do
@@ -261,7 +263,7 @@ function _M:_build_object()
             end
         end
 
-        yielding(self.yieldable)
+        yielding(yieldable)
 
         self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
