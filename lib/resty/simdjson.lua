@@ -451,13 +451,18 @@ function _M:encode(item)
     local res, err = encode_helper(self, item, function(s)
         buf:put(s)
 
-        if self.yieldable then
-            iterations = iterations - 1
-            if iterations <= 0 then
-                iterations = MAX_ITERATIONS
-                yielding(true)
-            end
+        if not self.yieldable then
+            return
         end
+
+        iterations = iterations - 1
+        if iterations > 0 then
+            return
+        end
+
+        -- iterations <= 0, should reset iterations then yield
+        iterations = MAX_ITERATIONS
+        yielding(true)
     end)
     if not res then
         return nil, err
