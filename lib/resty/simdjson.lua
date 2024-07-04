@@ -22,6 +22,7 @@ local ngx_null = ngx.null
 local ngx_sleep = ngx.sleep
 
 
+-- From: https://github.com/openresty/lua-resty-signal/blob/master/lib/resty/signal.lua
 local load_shared_lib
 do
     local string_gmatch = string.gmatch
@@ -55,9 +56,12 @@ do
 end  -- do
 
 
-local C, tried_paths = load_shared_lib("libsimdjson_ffi.so")
+local lib_name = ffi.os == "OSX" and "libsimdjson_ffi.dylib" or "libsimdjson_ffi.so"
+
+
+local C, tried_paths = load_shared_lib(lib_name)
 if not C then
-    error("could not load libsimdjson.so from the following paths:\n" ..
+    error(("could not load %s shared library from the following paths:\n"):format(lib_name) ..
           table.concat(tried_paths, "\n"), 2)
 end
 
