@@ -1,3 +1,11 @@
+OS=$(shell uname -s)
+
+ifeq ($(OS), Darwin)
+SHLIB_EXT=dylib
+else
+SHLIB_EXT=so
+endif
+
 OPENRESTY_PREFIX=/usr/local/openresty
 
 #LUA_VERSION := 5.1
@@ -9,14 +17,14 @@ INSTALL ?= install
 CXX=c++
 CXXOPTS=-ggdb -O3 -DNDEBUG
 
-build: libsimdjson_ffi.so
+build: libsimdjson_ffi.$(SHLIB_EXT)
 
 install: build
 	$(INSTALL) -m 664 lib/resty/*.lua $(DESTDIR)$(LUA_LIB_DIR)/resty/
-	$(INSTALL) -m 775 ./libsimdjson_ffi.so $(DESTDIR)$(LUA_LIB_DIR)/
+	$(INSTALL) -m 775 ./libsimdjson_ffi.$(SHLIB_EXT) $(DESTDIR)$(LUA_LIB_DIR)/
 
-libsimdjson_ffi.so: simdjson.o libsimdjson_ffi.o
-	$(CXX) $(CXXOPTS) -shared -o libsimdjson_ffi.so simdjson.o libsimdjson_ffi.o
+libsimdjson_ffi.$(SHLIB_EXT): simdjson.o libsimdjson_ffi.o
+	$(CXX) $(CXXOPTS) -shared -o libsimdjson_ffi.$(SHLIB_EXT) simdjson.o libsimdjson_ffi.o
 
 simdjson.o: simdjson.cpp simdjson.h
 	$(CXX) $(CXXOPTS) -o simdjson.o -c -fPIC simdjson.cpp
@@ -25,7 +33,7 @@ libsimdjson_ffi.o: simdjson_ffi.cpp simdjson_ffi.h
 	$(CXX) $(CXXOPTS) -o libsimdjson_ffi.o  -c -fPIC simdjson_ffi.cpp
 
 clean:
-	rm -f *.o *.so
+	rm -f *.o *.$(SHLIB_EXT)
 
 test: build
 	PATH=$(OPENRESTY_PREFIX)/nginx/sbin:$$PATH prove -r t/
