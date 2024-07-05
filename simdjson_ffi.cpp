@@ -96,7 +96,7 @@ extern "C" {
             return SIMDJSON_FFI_ERROR;
         }
 
-        return ++state->ops_n;
+        return state->ops_n;
     }
 
     int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) {
