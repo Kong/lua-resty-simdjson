@@ -32,7 +32,7 @@ __DATA__
             local parser = simdjson.new()
             assert(parser)
 
-            local str = parser:encode({ [1] = 1, [3] = 3 })
+            local str = parser:encode({ [1] = 1, [3] = 3, })
 
             assert(str)
             assert(type(str) == "string")
@@ -60,7 +60,7 @@ GET /t
             local parser = simdjson.new()
             assert(parser)
 
-            local str = parser:encode({ [-1] = -1, [3] = 3 })
+            local str = parser:encode({ [-1] = -1, [3] = 3, })
 
             assert(str)
             assert(type(str) == "string")
@@ -93,7 +93,7 @@ ok
             local parser = simdjson.new()
             assert(parser)
 
-            local str = parser:encode({ [1000] = 1000 })
+            local str = parser:encode({ [1000] = 1000, })
 
             assert(str)
             assert(type(str) == "string")
