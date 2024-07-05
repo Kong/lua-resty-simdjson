@@ -65,6 +65,7 @@ if not C then
           table.concat(tried_paths, "\n"), 2)
 end
 
+
 ffi.cdef([[
 typedef enum {
     SIMDJSON_FFI_OPCODE_ARRAY = 0,
@@ -76,7 +77,6 @@ typedef enum {
     SIMDJSON_FFI_OPCODE_RETURN
 } simdjson_ffi_opcode_e;
 
-
 typedef struct {
     simdjson_ffi_opcode_e      opcode;
     const char                *str;
@@ -84,9 +84,7 @@ typedef struct {
     double                     number;
 } simdjson_ffi_op_t;
 
-
 typedef struct simdjson_ffi_state_t simdjson_ffi_state;
-
 
 simdjson_ffi_state *simdjson_ffi_state_new();
 simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state);
