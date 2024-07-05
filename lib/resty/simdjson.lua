@@ -129,6 +129,7 @@ function _M.new(yieldable)
         state = ffi_gc(state, C.simdjson_ffi_state_free),
         ops = C.simdjson_ffi_state_get_ops(state),
         yieldable = yieldable,
+        number_precision = "%.16g",  -- up to 16 decimals
     }
 
     return setmetatable(self, _MT)
@@ -473,6 +474,15 @@ function _M:encode(item)
     end
 
     return buf:tostring()
+end
+
+
+function _M:encode_number_precision(precision)
+    assert(type(precision) == "number")
+    assert(math.floor(precision) == precision)
+    assert(precision >= 1 and precision <= 16)
+
+    self.number_precision = "%." .. precision .. "g"
 end
 
 
