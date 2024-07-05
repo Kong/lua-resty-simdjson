@@ -12,7 +12,7 @@ The fastest way to decode JSON in OpenResty for latency sensitive applications.
     * [simdjson.decode](#simdjsondecode)
     * [simdjson.encode](#simdjsonencode)
     * [simdjson.encode\_helper](#simdjsonencode_helper)
-    * [encode\_number\_precision](#encode_number_precision)
+    * [simdjson.encode\_number\_precision](#encode_number_precision)
 * [Performance characteristics](#performance-characteristics)
     * [Speed & Latency](#speed--latency)
     * [Memory](#memory)
