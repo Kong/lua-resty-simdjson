@@ -147,12 +147,6 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
                     }
                 }
 
-                if (!frame.processing) {
-                    state->frames.pop();
-
-                    state->ops[state->ops_n++].opcode = SIMDJSON_FFI_OPCODE_RETURN;
-                }
-
                 break;
             }
 
@@ -191,17 +185,17 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
                     }
                 }
 
-                if (!frame.processing) {
-                    state->frames.pop();
-
-                    state->ops[state->ops_n++].opcode = SIMDJSON_FFI_OPCODE_RETURN;
-                }
-
                 break;
             }
 
             default:
                 SIMDJSON_UNREACHABLE();
+        }
+
+        if (!frame.processing) {
+            state->frames.pop();
+
+            state->ops[state->ops_n++].opcode = SIMDJSON_FFI_OPCODE_RETURN;
         }
     }
 
