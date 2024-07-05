@@ -12,6 +12,7 @@ The fastest way to decode JSON in OpenResty for latency sensitive applications.
     * [simdjson.decode](#simdjsondecode)
     * [simdjson.encode](#simdjsonencode)
     * [simdjson.encode\_helper](#simdjsonencode_helper)
+    * [encode\_number\_precision](#encode_number_precision)
 * [Performance characteristics](#performance-characteristics)
     * [Speed & Latency](#speed--latency)
     * [Memory](#memory)
@@ -126,6 +127,18 @@ as an example on how to use String Buffers to achieve more efficient I/O with th
 This function does not have inherit yielding support no matter how parser was initiated.
 If your callback does not perform any I/O operations, it is a good idea to implement
 some yielding inside the callback. See the source code of [`:encode()`](#simdjsonencode) function for example.
+
+**Safety:** This method is always reentrant no matter how parser was initiated.
+
+[Back to TOC](#table-of-contents)
+
+## simdjson.encode\_number\_precision
+
+**syntax:** *parser:encode_number_precision(precision)*
+
+**context:** *any context*
+
+Allows encoding of numbers with a precision up to 16 decimals.
 
 **Safety:** This method is always reentrant no matter how parser was initiated.
 
