@@ -485,9 +485,9 @@ local MAX_ITERATIONS = 2048
 
 
 function _M:encode(item)
-    local yieldable = self.yieldable
     local buf = string_buffer.new()
     local iterations = MAX_ITERATIONS
+    local yieldable = self.yieldable
 
     local res, err = encode_helper(self, item, function(s)
         buf:put(s)
