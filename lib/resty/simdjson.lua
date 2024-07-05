@@ -322,7 +322,8 @@ do
     local tostring = tostring
     local string_byte = string.byte
     local string_char = string.char
-    local table_isarray = require("table.isarray")
+    local tb_isarray = require("table.isarray")
+    local tb_nkeys = require("table.nkeys")
 
     local ESCAPE_TABLE = {
         "\\u0001", "\\u0002", "\\u0003",
@@ -369,6 +370,39 @@ do
         if not ESCAPE_TABLE[i] then
             ESCAPE_TABLE[i] = string_char(i)
         end
+    end
+
+    local function table_isarray(tbl)
+        local is_array = tb_isarray(tbl)
+        if not is_array then
+            return false
+        end
+
+        local count = #tbl
+        local nkeys = tb_nkeys(tbl)
+
+        -- table is a normal array
+        if count == nkeys then
+            return true, count
+        end
+
+        -- table may have negative index or hole
+
+        local min, max = 1, 1
+        for k in pairs(tbl) do
+          if k < min then
+              min = k
+          end
+          if k > max then
+              max = k
+          end
+        end
+
+        if min <= 0 then
+            return false
+        end
+
+        return true, max
     end
 
     function encode_helper(self, item, cb)
