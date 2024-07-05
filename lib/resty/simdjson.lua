@@ -387,19 +387,17 @@ do
         end
 
         -- table may have negative/zero index or hole
-        local min, max = 1, 1
-        for k in pairs(tbl) do
-          if k < min then
-              min = k
-          end
-          if k > max then
-              max = k
-          end
-        end
 
-        -- negative or zero index
-        if min < 1 then
-            return false
+        local max = 1
+        for k in pairs(tbl) do
+            -- negative or zero index
+            if k <= 0 then
+                return false
+            end
+
+            if k > max then
+                max = k
+            end
         end
 
         return true, max
