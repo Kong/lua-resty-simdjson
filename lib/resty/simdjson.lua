@@ -434,9 +434,10 @@ do
             else
                 cb("{")
                 for k, v in pairs(item) do
-                    if type(k) ~= "string" then
-                        return nil, "object keys must be strings"
-                    end
+                    --if type(k) ~= "string" then
+                    --    return nil, "object keys must be strings"
+                    --end
+                    k = tostring(k)
 
                     if comma then
                         cb(",")
