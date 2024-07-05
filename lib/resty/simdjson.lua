@@ -122,7 +122,6 @@ function _M.new(yieldable)
         return nil, "no memory"
     end
 
-
     local self = {
         ops_index = 0,
         ops_size = 0,
