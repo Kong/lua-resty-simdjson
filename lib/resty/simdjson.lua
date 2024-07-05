@@ -386,8 +386,7 @@ do
             return true, count
         end
 
-        -- table may have negative index or hole
-
+        -- table may have negative/zero index or hole
         local min, max = 1, 1
         for k in pairs(tbl) do
           if k < min then
@@ -398,7 +397,7 @@ do
           end
         end
 
-        -- negative index
+        -- negative or zero index
         if min < 1 then
             return false
         end

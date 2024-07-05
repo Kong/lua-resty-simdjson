@@ -32,7 +32,7 @@ __DATA__
             local parser = simdjson.new()
             assert(parser)
 
-            local str = parser:encode({ [3] = 3 })
+            local str = parser:encode({ [1] = 1, [3] = 3 })
 
             assert(str)
             assert(type(str) == "string")
@@ -43,14 +43,14 @@ __DATA__
 --- request
 GET /t
 --- response_body
-[null,null,3]
+[1,null,3]
 --- no_error_log
 [error]
 [warn]
 [crit]
 
 
-=== TEST 2: encode array with negative index to object
+=== TEST 2: encode array with negative index to a json object
 --- http_config eval: $::HttpConfig
 --- config
     location = /t {
@@ -79,5 +79,39 @@ ok
 [warn]
 [crit]
 
+
+=== TEST 3: encode a large sparse parray
+--- http_config eval: $::HttpConfig
+--- config
+    location = /t {
+        content_by_lua_block {
+            local simdjson = require("resty.simdjson")
+
+            local parser = simdjson.new()
+            assert(parser)
+
+            local str = parser:encode({ [1000] = 1000 })
+
+            assert(str)
+            assert(type(str) == "string")
+
+            local nulls = {}
+            for i = 1, 999 do
+                nulls[i] = "null"
+            end
+
+            assert(str == "[" .. table.concat(nulls, ",") .. ",1000]")
+
+            ngx.say("ok")
+        }
+    }
+--- request
+GET /t
+--- response_body
+ok
+--- no_error_log
+[error]
+[warn]
+[crit]
 
 
