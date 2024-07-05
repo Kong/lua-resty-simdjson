@@ -398,7 +398,8 @@ do
           end
         end
 
-        if min <= 0 then
+        -- negative index
+        if min < 1 then
             return false
         end
 
@@ -410,11 +411,13 @@ do
         if typ == "table" then
             local comma = false
 
-            local is_array = table_isarray(item)
+            local is_array, count = table_isarray(item)
 
             if is_array then
                 cb("[")
-                for _, v in ipairs(item) do
+                for i = 1, count do
+                    local v = item[i] or ngx_null
+
                     if comma then
                         cb(",")
                     end
