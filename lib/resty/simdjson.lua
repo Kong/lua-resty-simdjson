@@ -151,49 +151,49 @@ function _M:_build_array()
         error("already destroyed", 2)
     end
 
-    local n = 0
+    local n = 1
     local tbl = table_new(4, 0)
     local ops = self.ops
+    local yieldable = self.yieldable
 
     repeat
         while self.ops_index < self.ops_size do
-            local opcode = ops[self.ops_index].opcode
-            self.ops_index = self.ops_index + 1
+            local ops_index = self.ops_index
+            local op = ops[ops_index]
+            local opcode = op.opcode
+
+            self.ops_index = ops_index + 1
 
             if opcode == SIMDJSON_FFI_OPCODE_RETURN then
                 return tbl
             end
 
             if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
-                n = n + 1
                 tbl[n] = self:_build_array()
 
             elseif opcode == SIMDJSON_FFI_OPCODE_OBJECT then
-                n = n + 1
                 tbl[n] = self:_build_object()
 
             elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
-                n = n + 1
-                tbl[n] = ops[self.ops_index - 1].number
+                tbl[n] = op.number
 
             elseif opcode == SIMDJSON_FFI_OPCODE_STRING then
-                n = n + 1
-                tbl[n] = ffi_string(ops[self.ops_index - 1].str, ops[self.ops_index - 1].size)
+                tbl[n] = ffi_string(op.str, op.size)
 
             elseif opcode == SIMDJSON_FFI_OPCODE_BOOLEAN then
-                n = n + 1
-                tbl[n] = ops[self.ops_index - 1].size == 1
+                tbl[n] = op.size == 1
 
             elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
-                n = n + 1
                 tbl[n] = ngx_null
 
             else
                 assert(false) -- never reach here
             end
+
+            n = n + 1
         end
 
-        yielding(self.yieldable)
+        yielding(yieldable)
 
         self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
@@ -215,11 +215,15 @@ function _M:_build_object()
     local tbl = table_new(0, 4)
     local key
     local ops = self.ops
+    local yieldable = self.yieldable
 
     repeat
         while self.ops_index < self.ops_size do
-            local opcode = ops[self.ops_index].opcode
-            self.ops_index = self.ops_index + 1
+            local ops_index = self.ops_index
+            local op = ops[ops_index]
+            local opcode = op.opcode
+
+            self.ops_index = ops_index + 1
 
             if opcode == SIMDJSON_FFI_OPCODE_RETURN then
                 assert(key == nil)
@@ -231,7 +235,7 @@ function _M:_build_object()
             if not key then
                 -- object key must be string
                 assert(opcode == SIMDJSON_FFI_OPCODE_STRING)
-                key = ffi_string(ops[self.ops_index - 1].str, ops[self.ops_index - 1].size)
+                key = ffi_string(op.str, op.size)
 
             else
                 -- value
@@ -242,13 +246,13 @@ function _M:_build_object()
                     tbl[key] = self:_build_object()
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
-                    tbl[key] = ops[self.ops_index - 1].number
+                    tbl[key] = op.number
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_STRING then
-                    tbl[key] = ffi_string(ops[self.ops_index - 1].str, ops[self.ops_index - 1].size)
+                    tbl[key] = ffi_string(op.str, op.size)
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_BOOLEAN then
-                    tbl[key] = ops[self.ops_index - 1].size == 1
+                    tbl[key] = op.size == 1
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
                     tbl[key] = ngx_null
@@ -261,7 +265,7 @@ function _M:_build_object()
             end
         end
 
-        yielding(self.yieldable)
+        yielding(yieldable)
 
         self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
@@ -451,13 +455,18 @@ function _M:encode(item)
     local res, err = encode_helper(self, item, function(s)
         buf:put(s)
 
-        if self.yieldable then
-            iterations = iterations - 1
-            if iterations <= 0 then
-                iterations = MAX_ITERATIONS
-                yielding(true)
-            end
+        if not self.yieldable then
+            return
         end
+
+        iterations = iterations - 1
+        if iterations > 0 then
+            return
+        end
+
+        -- iterations <= 0, should reset iterations then yield
+        iterations = MAX_ITERATIONS
+        yielding(true)
     end)
     if not res then
         return nil, err
