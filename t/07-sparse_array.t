@@ -34,7 +34,6 @@ __DATA__
 
             local str = parser:encode({ [1] = 1, [3] = 3, })
 
-            assert(str)
             assert(type(str) == "string")
 
             ngx.say(str)
@@ -62,7 +61,6 @@ GET /t
 
             local str = parser:encode({ [-1] = -1, [3] = 3, })
 
-            assert(str)
             assert(type(str) == "string")
 
             assert(str:sub(1, 1) == "{")
@@ -83,7 +81,7 @@ ok
 [crit]
 
 
-=== TEST 3: encode a large sparse parray
+=== TEST 3: encode a large sparse array
 --- http_config eval: $::HttpConfig
 --- config
     location = /t {
@@ -95,7 +93,6 @@ ok
 
             local str = parser:encode({ [1000] = 1000, })
 
-            assert(str)
             assert(type(str) == "string")
 
             local nulls = {}
