@@ -64,6 +64,9 @@ GET /t
 
             assert(str)
             assert(type(str) == "string")
+
+            assert(str:sub(1, 1) == "{")
+            assert(str:sub(-1, -1) == "}")
             assert(str:find([["-1":-1]], 1, true))
             assert(str:find([["3":3]], 1, true))
 
