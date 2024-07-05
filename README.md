@@ -140,6 +140,8 @@ some yielding inside the callback. See the source code of [`:encode()`](#simdjso
 
 Allows encoding of numbers with a precision up to 16 decimals.
 
+The default number precision is `16`.
+
 **Safety:** This method is always reentrant no matter how parser was initiated.
 
 [Back to TOC](#table-of-contents)
