@@ -429,8 +429,10 @@ do
             end
             cb("\"")
 
-        elseif typ == "number" or typ == "boolean" then
-            -- TODO: number's precision
+        elseif typ == "number" then
+            cb(self.number_precision:format(item))
+
+        elseif typ == "boolean" then
             cb(tostring(item))
 
         elseif item == ngx_null then
