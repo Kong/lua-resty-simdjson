@@ -14,29 +14,36 @@ using namespace simdjson;
 // T may be ondemand::value or state->document
 template<typename T>
 static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
+    bool go_deeper = false;
+
     switch (value.type()) {
     case ondemand::json_type::array: {
+        state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_ARRAY;
+
         ondemand::array a = value;
         state.frames.emplace(a.begin(), a.end());
 
-        state.ops[state.ops_n++].opcode = SIMDJSON_FFI_OPCODE_ARRAY;
+        go_deeper = true;
 
-        return true;
+        break;
     }
 
     case ondemand::json_type::object: {
+        state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_OBJECT;
+
         ondemand::object o = value;
         state.frames.emplace(o.begin(), o.end());
 
-        state.ops[state.ops_n++].opcode = SIMDJSON_FFI_OPCODE_OBJECT;
+        go_deeper = true;
 
-        return true;
+        break;
     }
 
     case ondemand::json_type::number: {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_NUMBER;
-        state.ops[state.ops_n++].number = double(value);
-        return false;
+        state.ops[state.ops_n].number = double(value);
+
+        break;
     }
 
     case ondemand::json_type::string: {
@@ -44,26 +51,33 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
         std::string_view str = value;
 
         state.ops[state.ops_n].str = str.data();
-        state.ops[state.ops_n++].size = str.size();
-        return false;
+        state.ops[state.ops_n].size = str.size();
+
+        break;
     }
 
     case ondemand::json_type::boolean: {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_BOOLEAN;
-        state.ops[state.ops_n++].size = bool(value);
-        return false;
+        state.ops[state.ops_n].size = bool(value);
+
+        break;
     }
 
     case ondemand::json_type::null: {
         SIMDJSON_DEVELOPMENT_ASSERT(value.is_null());
 
-        state.ops[state.ops_n++].opcode = SIMDJSON_FFI_OPCODE_NULL;
-        return false;
+        state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_NULL;
+
+        break;
     }
 
     default:
         SIMDJSON_UNREACHABLE();
     }
+
+    state.ops_n++;
+
+    return go_deeper;
 }
 
 
