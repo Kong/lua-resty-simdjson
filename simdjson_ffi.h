@@ -7,6 +7,7 @@
 #ifndef SIMDJSON_FFI_H
 #define SIMDJSON_FFI_H
 
+
 #include <stack>
 
 
@@ -46,7 +47,7 @@ struct simdjson_ffi_stack_frame {
     typedef simdjson::ondemand::object_iterator simdjson_object_iterator;
 
     simdjson_ffi_resume_state       state;
-    bool                            processing;
+    bool                            processing = false;
 
     union it {
         struct array_t {
@@ -72,10 +73,10 @@ struct simdjson_ffi_stack_frame {
     } it;
 
     simdjson_ffi_stack_frame(simdjson_array_iterator current, simdjson_array_iterator end):
-        state(simdjson_ffi_resume_state::array), processing(false), it(current, end) {}
+        state(simdjson_ffi_resume_state::array), it(current, end) {}
 
     simdjson_ffi_stack_frame(simdjson_object_iterator current, simdjson_object_iterator end):
-        state(simdjson_ffi_resume_state::object), processing(false), it(current, end) {}
+        state(simdjson_ffi_resume_state::object), it(current, end) {}
 };
 
 
