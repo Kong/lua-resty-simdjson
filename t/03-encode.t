@@ -262,3 +262,30 @@ ok
 
 
 
+=== TEST 8: nested array data
+--- http_config eval: $::HttpConfig
+--- config
+    location = /t {
+        content_by_lua_block {
+            local simdjson = require("resty.simdjson")
+
+            local parser = simdjson.new()
+            assert(parser)
+
+            local v = parser:encode({{{{{{{{{{1}}}}}}}}}})
+            assert(type(v) == "string")
+
+            ngx.say(v)
+        }
+    }
+--- request
+GET /t
+--- response_body
+[[[[[[[[[[1]]]]]]]]]]
+--- no_error_log
+[error]
+[warn]
+[crit]
+
+
+
