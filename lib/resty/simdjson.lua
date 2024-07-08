@@ -318,7 +318,6 @@ end
 local encode_helper
 do
     local pairs = pairs
-    local ipairs = ipairs
     local tostring = tostring
     local string_byte = string.byte
     local string_char = string.char
