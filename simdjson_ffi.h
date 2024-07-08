@@ -50,23 +50,16 @@ struct simdjson_ffi_stack_frame {
     bool                            processing = false;
 
     union it {
-        struct array_t {
+        template<typename Iter>
+        struct range {
+            Iter current;
+            Iter end;
 
-            simdjson_array_iterator current;
-            simdjson_array_iterator end;
+            range(Iter current, Iter end) : current(current), end(end) {}
+        };
 
-            array_t(simdjson_array_iterator current, simdjson_array_iterator end):
-                current(current), end(end) {}
-        } array;
-
-        struct object_t {
-
-            simdjson_object_iterator current;
-            simdjson_object_iterator end;
-
-            object_t(simdjson_object_iterator current, simdjson_object_iterator end):
-                current(current), end(end) {}
-        } object;
+        range<simdjson_array_iterator>  array;
+        range<simdjson_object_iterator> object;
 
         it(simdjson_array_iterator current, simdjson_array_iterator end): array(current, end) {}
         it(simdjson_object_iterator current, simdjson_object_iterator end): object(current, end) {}
