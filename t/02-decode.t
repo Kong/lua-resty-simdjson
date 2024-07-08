@@ -306,3 +306,35 @@ ok
 
 
 
+=== TEST 8: nested array data
+--- http_config eval: $::HttpConfig
+--- config
+    location = /t {
+        content_by_lua_block {
+            local simdjson = require("resty.simdjson")
+
+            local parser = simdjson.new()
+            assert(parser)
+
+            -- [[[[[[[[[[1]]]]]]]]]]
+            local str = string.rep("[", 10) .. "1" .. string.rep("]", 10)
+
+            local v = parser:decode(str)
+            assert(type(v) == "table")
+            assert(type(v[1][1][1]) == "table")
+            assert(v[1][1][1][1][1][1][1][1][1][1] == 1)
+
+            ngx.say("ok")
+        }
+    }
+--- request
+GET /t
+--- response_body
+ok
+--- no_error_log
+[error]
+[warn]
+[crit]
+
+
+
