@@ -318,11 +318,11 @@ end
 local encode_helper
 do
     local pairs = pairs
-    local ipairs = ipairs
     local tostring = tostring
     local string_byte = string.byte
     local string_char = string.char
-    local table_isarray = require("table.isarray")
+    local tb_isarray = require("table.isarray")
+    local tb_nkeys = require("table.nkeys")
 
     local ESCAPE_TABLE = {
         "\\u0001", "\\u0002", "\\u0003",
@@ -371,16 +371,49 @@ do
         end
     end
 
+    local function table_isarray(tbl)
+        local is_array = tb_isarray(tbl)
+        if not is_array then
+            return false
+        end
+
+        local count = #tbl
+        local nkeys = tb_nkeys(tbl)
+
+        -- table is a normal array
+        if count == nkeys then
+            return true, count
+        end
+
+        -- table may have negative/zero index or hole
+
+        local max = 1
+        for k in pairs(tbl) do
+            -- negative or zero index
+            if k <= 0 then
+                return false
+            end
+
+            if k > max then
+                max = k
+            end
+        end
+
+        return true, max
+    end
+
     function encode_helper(self, item, cb)
         local typ = type(item)
         if typ == "table" then
             local comma = false
 
-            local is_array = table_isarray(item)
+            local is_array, count = table_isarray(item)
 
             if is_array then
                 cb("[")
-                for _, v in ipairs(item) do
+                for i = 1, count do
+                    local v = item[i] or ngx_null
+
                     if comma then
                         cb(",")
                     end
@@ -397,9 +430,11 @@ do
             else
                 cb("{")
                 for k, v in pairs(item) do
-                    if type(k) ~= "string" then
-                        return nil, "object keys must be strings"
+                    local kt = type(k)
+                    if kt ~= "string" and kt ~= "number" then
+                        return nil, "object key must be a number or string"
                     end
+                    k = tostring(k)
 
                     if comma then
                         cb(",")
@@ -451,11 +486,12 @@ local MAX_ITERATIONS = 2048
 function _M:encode(item)
     local buf = string_buffer.new()
     local iterations = MAX_ITERATIONS
+    local yieldable = self.yieldable
 
     local res, err = encode_helper(self, item, function(s)
         buf:put(s)
 
-        if not self.yieldable then
+        if not yieldable then
             return
         end
 
@@ -482,6 +518,12 @@ function _M:encode_number_precision(precision)
     assert(precision >= 1 and precision <= 16)
 
     self.number_precision = "%." .. precision .. "g"
+end
+
+
+-- we will never encode sparse array to object
+function _M:encode_sparse_array(convert)
+    assert(not convert)
 end
 
 

@@ -12,7 +12,8 @@ The fastest way to decode JSON in OpenResty for latency sensitive applications.
     * [simdjson.decode](#simdjsondecode)
     * [simdjson.encode](#simdjsonencode)
     * [simdjson.encode\_helper](#simdjsonencode_helper)
-    * [simdjson.encode\_number\_precision](#encode_number_precision)
+    * [simdjson.encode\_number\_precision](#simdjsonencode_number_precision)
+    * [simdjson.encode\_sparse\_array](#simdjsonencode_sparse_array)
 * [Performance characteristics](#performance-characteristics)
     * [Speed & Latency](#speed--latency)
     * [Memory](#memory)
@@ -141,6 +142,21 @@ some yielding inside the callback. See the source code of [`:encode()`](#simdjso
 Allows encoding of numbers with a precision up to 16 decimals.
 
 The default number precision is `16`.
+
+**Safety:** This method is always reentrant no matter how parser was initiated.
+
+[Back to TOC](#table-of-contents)
+
+
+## simdjson.encode\_sparse\_array
+
+**syntax:** *parser:encode_sparse_array(convert)*
+
+**context:** *any context*
+
+The only acceptable value of `convert` is `false`, which means that
+the sparse array will always be encoded to a JSON array and
+never a JSON object.
 
 **Safety:** This method is always reentrant no matter how parser was initiated.
 
