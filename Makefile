@@ -26,11 +26,11 @@ install: build
 libsimdjson_ffi.$(SHLIB_EXT): simdjson.o libsimdjson_ffi.o
 	$(CXX) $(CXXOPTS) -shared -o libsimdjson_ffi.$(SHLIB_EXT) simdjson.o libsimdjson_ffi.o
 
-simdjson.o: simdjson.cpp simdjson.h
-	$(CXX) $(CXXOPTS) -o simdjson.o -c -fPIC simdjson.cpp
+simdjson.o: src/simdjson.cpp src/simdjson.h
+	$(CXX) $(CXXOPTS) -o simdjson.o -c -fPIC src/simdjson.cpp
 
-libsimdjson_ffi.o: simdjson_ffi.cpp simdjson_ffi.h
-	$(CXX) $(CXXOPTS) -o libsimdjson_ffi.o  -c -fPIC simdjson_ffi.cpp
+libsimdjson_ffi.o: src/simdjson_ffi.cpp src/simdjson_ffi.h
+	$(CXX) $(CXXOPTS) -o libsimdjson_ffi.o  -c -fPIC src/simdjson_ffi.cpp
 
 clean:
 	rm -f *.o *.$(SHLIB_EXT)
