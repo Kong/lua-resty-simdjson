@@ -521,4 +521,10 @@ function _M:encode_number_precision(precision)
 end
 
 
+-- we will never encode sparse array to object
+function _M:encode_sparse_array(convert)
+    assert(not convert)
+end
+
+
 return _M
