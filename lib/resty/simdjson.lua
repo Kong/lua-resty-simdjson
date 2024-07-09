@@ -290,23 +290,24 @@ function _M:decode(json)
     end
 
     local op = self.ops[0]
+    local opcode = op.opcode
 
-    if op.opcode == SIMDJSON_FFI_OPCODE_ARRAY then
+    if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
         return self:_build_array(self.state)
 
-    elseif op.opcode == SIMDJSON_FFI_OPCODE_OBJECT then
+    elseif opcode == SIMDJSON_FFI_OPCODE_OBJECT then
         return self:_build_object(self.state)
 
-    elseif op.opcode == SIMDJSON_FFI_OPCODE_NUMBER then
+    elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
         return op.number
 
-    elseif op.opcode == SIMDJSON_FFI_OPCODE_STRING then
+    elseif opcode == SIMDJSON_FFI_OPCODE_STRING then
         return ffi_string(op.str, op.size)
 
-    elseif op.opcode == SIMDJSON_FFI_OPCODE_BOOLEAN then
+    elseif opcode == SIMDJSON_FFI_OPCODE_BOOLEAN then
         return op.size == 1
 
-    elseif op.opcode == SIMDJSON_FFI_OPCODE_NULL then
+    elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
         return ngx_null
 
     else
