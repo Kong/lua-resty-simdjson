@@ -79,15 +79,20 @@ typedef enum {
 
 typedef struct {
     simdjson_ffi_opcode_e      opcode;
-    const char                *str;
     uint32_t                   size;
-    double                     number;
 } simdjson_ffi_op_t;
+
+typedef union {
+    const char                *str;
+    double                     number;
+    uint32_t                   boolean;
+} simdjson_ffi_val_t;
 
 typedef struct simdjson_ffi_state_t simdjson_ffi_state;
 
 simdjson_ffi_state *simdjson_ffi_state_new();
 simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state);
+simdjson_ffi_val_t *simdjson_ffi_state_get_vals(simdjson_ffi_state *state);
 void simdjson_ffi_state_free(simdjson_ffi_state *state);
 int simdjson_ffi_is_eof(simdjson_ffi_state *state);
 int simdjson_ffi_parse(simdjson_ffi_state *state, const char *json, size_t len, char **errmsg);
@@ -126,6 +131,7 @@ function _M.new(yieldable)
         ops_size = 0,
         state = ffi_gc(state, C.simdjson_ffi_state_free),
         ops = C.simdjson_ffi_state_get_ops(state),
+        vals = C.simdjson_ffi_state_get_vals(state),
         yieldable = yieldable,
         number_precision = "%.16g",  -- up to 16 decimals
     }
@@ -142,23 +148,26 @@ function _M:destroy()
     C.simdjson_ffi_state_free(ffi_gc(self.state, nil))
     self.state = nil
     self.ops = nil
+    self.vals = nil
 end
 
 
-function _M:_build_array()
+function _M:_build_array(count)
     if not self.state then
         error("already destroyed", 2)
     end
 
     local n = 1
-    local tbl = table_new(4, 0)
+    local tbl = table_new(count, 0)
     local ops = self.ops
+    local vals = self.vals
     local yieldable = self.yieldable
 
     repeat
         while self.ops_index < self.ops_size do
             local ops_index = self.ops_index
             local op = ops[ops_index]
+            local val = vals[ops_index]
             local opcode = op.opcode
 
             self.ops_index = ops_index + 1
@@ -168,19 +177,19 @@ function _M:_build_array()
             end
 
             if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
-                tbl[n] = self:_build_array()
+                tbl[n] = self:_build_array(op.size)
 
             elseif opcode == SIMDJSON_FFI_OPCODE_OBJECT then
-                tbl[n] = self:_build_object()
+                tbl[n] = self:_build_object(op.size)
 
             elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
-                tbl[n] = op.number
+                tbl[n] = val.number
 
             elseif opcode == SIMDJSON_FFI_OPCODE_STRING then
-                tbl[n] = ffi_string(op.str, op.size)
+                tbl[n] = ffi_string(val.str, op.size)
 
             elseif opcode == SIMDJSON_FFI_OPCODE_BOOLEAN then
-                tbl[n] = op.size == 1
+                tbl[n] = val.boolean == 1
 
             elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
                 tbl[n] = ngx_null
@@ -206,20 +215,22 @@ function _M:_build_array()
 end
 
 
-function _M:_build_object()
+function _M:_build_object(count)
     if not self.state then
         error("already destroyed", 2)
     end
 
-    local tbl = table_new(0, 4)
+    local tbl = table_new(0, count)
     local key
     local ops = self.ops
+    local vals = self.vals
     local yieldable = self.yieldable
 
     repeat
         while self.ops_index < self.ops_size do
             local ops_index = self.ops_index
             local op = ops[ops_index]
+            local val = vals[ops_index]
             local opcode = op.opcode
 
             self.ops_index = ops_index + 1
@@ -234,24 +245,24 @@ function _M:_build_object()
             if not key then
                 -- object key must be string
                 assert(opcode == SIMDJSON_FFI_OPCODE_STRING)
-                key = ffi_string(op.str, op.size)
+                key = ffi_string(val.str, op.size)
 
             else
                 -- value
                 if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
-                    tbl[key] = self:_build_array()
+                    tbl[key] = self:_build_array(op.size)
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_OBJECT then
-                    tbl[key] = self:_build_object()
+                    tbl[key] = self:_build_object(op.size)
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
-                    tbl[key] = op.number
+                    tbl[key] = val.number
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_STRING then
-                    tbl[key] = ffi_string(op.str, op.size)
+                    tbl[key] = ffi_string(val.str, op.size)
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_BOOLEAN then
-                    tbl[key] = op.size == 1
+                    tbl[key] = val.boolean == 1
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
                     tbl[key] = ngx_null
@@ -292,22 +303,23 @@ function _M:decode(json)
 
     local res
     local op = self.ops[0]
+    local val = self.vals[0]
     local opcode = op.opcode
 
     if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
-        res = self:_build_array(self.state)
+        res = self:_build_array(op.size)
 
     elseif opcode == SIMDJSON_FFI_OPCODE_OBJECT then
-        res = self:_build_object(self.state)
+        res = self:_build_object(op.size)
 
     elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
-        res = op.number
+        res = val.number
 
     elseif opcode == SIMDJSON_FFI_OPCODE_STRING then
-        res = ffi_string(op.str, op.size)
+        res = ffi_string(val.str, op.size)
 
     elseif opcode == SIMDJSON_FFI_OPCODE_BOOLEAN then
-        res = op.size == 1
+        res = val.boolean == 1
 
     elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
         res = ngx_null

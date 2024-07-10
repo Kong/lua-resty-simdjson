@@ -23,6 +23,8 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
         ondemand::array a = value;
         state.frames.emplace(a.begin(), a.end());
 
+        state.ops[state.ops_n].size = a.count_elements();
+
         go_deeper = true;
 
         break;
@@ -34,6 +36,8 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
         ondemand::object o = value;
         state.frames.emplace(o.begin(), o.end());
 
+        state.ops[state.ops_n].size = o.count_fields();
+
         go_deeper = true;
 
         break;
@@ -41,7 +45,7 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
 
     case ondemand::json_type::number: {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_NUMBER;
-        state.ops[state.ops_n].number = double(value);
+        state.vals[state.ops_n].number = double(value);
 
         break;
     }
@@ -50,15 +54,15 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_STRING;
         std::string_view str = value;
 
-        state.ops[state.ops_n].str = str.data();
         state.ops[state.ops_n].size = str.size();
+        state.vals[state.ops_n].str = str.data();
 
         break;
     }
 
     case ondemand::json_type::boolean: {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_BOOLEAN;
-        state.ops[state.ops_n].size = bool(value);
+        state.vals[state.ops_n].boolean = bool(value);
 
         break;
     }
@@ -90,6 +94,12 @@ simdjson_ffi_state *simdjson_ffi_state_new() {
 extern "C"
 simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state) {
     return state->ops;
+}
+
+
+extern "C"
+simdjson_ffi_val_t *simdjson_ffi_state_get_vals(simdjson_ffi_state *state) {
+    return state->vals;
 }
 
 
@@ -171,20 +181,19 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
             }
 
             case simdjson_ffi_resume_state::object: {
-                // resume object iteration
-
                 if (frame.processing) {
                     ++frame.it.object.current;
                     frame.processing = false;
                 }
 
+                // resume object iteration
                 for (auto it = frame.it.object.current; it != frame.it.object.end; ++it) {
                     auto field = *it;
                     std::string_view key = field.unescaped_key();
 
                     state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_STRING;
-                    state->ops[state->ops_n].str = key.data();
-                    state->ops[state->ops_n++].size = key.size();
+                    state->ops[state->ops_n].size = key.size();
+                    state->vals[state->ops_n++].str = key.data();
 
                     // this can not overflow, because we checked to make sure
                     // ops has at least 2 empty slots above
