@@ -29,9 +29,9 @@ extern "C" {
 
     typedef struct {
         simdjson_ffi_opcode_e      opcode;
-        const char                *str;
-        uint32_t                   size;
-        double                     number;
+        const char                *str;     /* value of string */
+        uint32_t                   size;    /* length of string or value of boolean */
+        double                     number;  /* value of number */
     } simdjson_ffi_op_t;
 }
 
