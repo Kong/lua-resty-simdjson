@@ -52,9 +52,6 @@ enum class simdjson_ffi_resume_state : unsigned char {
 
 
 struct simdjson_ffi_stack_frame {
-    typedef simdjson::ondemand::array_iterator  simdjson_array_iterator;
-    typedef simdjson::ondemand::object_iterator simdjson_object_iterator;
-
     simdjson_ffi_resume_state       state;
     bool                            processing = false;
 
@@ -67,18 +64,18 @@ struct simdjson_ffi_stack_frame {
             range(Iter current, Iter end) : current(current), end(end) {}
         };
 
-        range<simdjson_array_iterator>  array;
-        range<simdjson_object_iterator> object;
+        range<simdjson::ondemand::array_iterator>  array;
+        range<simdjson::ondemand::object_iterator> object;
 
-        it(simdjson_array_iterator current, simdjson_array_iterator end): array(current, end) {}
-        it(simdjson_object_iterator current, simdjson_object_iterator end): object(current, end) {}
+        it(simdjson::ondemand::array a): array(a.begin(), a.end()) {}
+        it(simdjson::ondemand::object o): object(o.begin(), o.end()) {}
     } it;
 
-    simdjson_ffi_stack_frame(simdjson_array_iterator current, simdjson_array_iterator end):
-        state(simdjson_ffi_resume_state::array), it(current, end) {}
+    simdjson_ffi_stack_frame(simdjson::ondemand::array a):
+        state(simdjson_ffi_resume_state::array), it(a) {}
 
-    simdjson_ffi_stack_frame(simdjson_object_iterator current, simdjson_object_iterator end):
-        state(simdjson_ffi_resume_state::object), it(current, end) {}
+    simdjson_ffi_stack_frame(simdjson::ondemand::object o):
+        state(simdjson_ffi_resume_state::object), it(o) {}
 };
 
 

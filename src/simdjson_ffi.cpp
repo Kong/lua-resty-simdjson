@@ -21,7 +21,7 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_ARRAY;
 
         ondemand::array a = value;
-        state.frames.emplace(a.begin(), a.end());
+        state.frames.emplace(a);
 
         go_deeper = true;
 
@@ -32,7 +32,7 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_OBJECT;
 
         ondemand::object o = value;
-        state.frames.emplace(o.begin(), o.end());
+        state.frames.emplace(o);
 
         go_deeper = true;
 
