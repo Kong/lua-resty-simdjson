@@ -67,14 +67,14 @@ struct simdjson_ffi_stack_frame {
         range<simdjson::ondemand::array_iterator>  array;
         range<simdjson::ondemand::object_iterator> object;
 
-        it(simdjson::ondemand::array a): array(a.begin(), a.end()) {}
-        it(simdjson::ondemand::object o): object(o.begin(), o.end()) {}
+        it(simdjson::ondemand::array &a): array(a.begin(), a.end()) {}
+        it(simdjson::ondemand::object &o): object(o.begin(), o.end()) {}
     } it;
 
-    simdjson_ffi_stack_frame(simdjson::ondemand::array a):
+    simdjson_ffi_stack_frame(simdjson::ondemand::array &a):
         state(simdjson_ffi_resume_state::array), it(a) {}
 
-    simdjson_ffi_stack_frame(simdjson::ondemand::object o):
+    simdjson_ffi_stack_frame(simdjson::ondemand::object &o):
         state(simdjson_ffi_resume_state::object), it(o) {}
 };
 
