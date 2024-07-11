@@ -120,7 +120,7 @@ int simdjson_ffi_parse(simdjson_ffi_state *state,
 
 
 extern "C"
-int simdjson_ffi_is_done(simdjson_ffi_state *state) {
+int simdjson_ffi_is_eof(simdjson_ffi_state *state) {
     return state->document.at_end();
 }
 

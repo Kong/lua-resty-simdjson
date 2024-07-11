@@ -89,7 +89,7 @@ typedef struct simdjson_ffi_state_t simdjson_ffi_state;
 simdjson_ffi_state *simdjson_ffi_state_new();
 simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state);
 void simdjson_ffi_state_free(simdjson_ffi_state *state);
-int simdjson_ffi_is_done(simdjson_ffi_state *state);
+int simdjson_ffi_is_eof(simdjson_ffi_state *state);
 int simdjson_ffi_parse(simdjson_ffi_state *state, const char *json, size_t len, char **errmsg);
 int simdjson_ffi_next(simdjson_ffi_state *state, char **errmsg);
 ]])
@@ -316,7 +316,7 @@ function _M:decode(json)
         assert(false) -- never reach here
     end
 
-    if res and res ~= ngx_null and C.simdjson_ffi_is_done(self.state) ~= 1 then
+    if res and res ~= ngx_null and C.simdjson_ffi_is_eof(self.state) ~= 1 then
         return nil, "simdjson: error: trailing content found"
     end
 
