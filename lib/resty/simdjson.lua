@@ -110,6 +110,7 @@ local SIMDJSON_FFI_OPCODE_RETURN = C.SIMDJSON_FFI_OPCODE_RETURN
 local SIMDJSON_FFI_ERROR = -1
 
 
+local DEFAULT_TABLE_SLOTS = 4
 local errmsg = require("resty.core.base").get_errmsg_ptr()
 
 
@@ -177,10 +178,10 @@ function _M:_build_array(count)
             end
 
             if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
-                tbl[n] = self:_build_array(op.size)
+                tbl[n] = self:_build_array(DEFAULT_TABLE_SLOTS)
 
             elseif opcode == SIMDJSON_FFI_OPCODE_OBJECT then
-                tbl[n] = self:_build_object(op.size)
+                tbl[n] = self:_build_object(DEFAULT_TABLE_SLOTS)
 
             elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
                 tbl[n] = val.number
@@ -250,10 +251,10 @@ function _M:_build_object(count)
             else
                 -- value
                 if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
-                    tbl[key] = self:_build_array(op.size)
+                    tbl[key] = self:_build_array(DEFAULT_TABLE_SLOTS)
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_OBJECT then
-                    tbl[key] = self:_build_object(op.size)
+                    tbl[key] = self:_build_object(DEFAULT_TABLE_SLOTS)
 
                 elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
                     tbl[key] = val.number
@@ -307,10 +308,10 @@ function _M:decode(json)
     local opcode = op.opcode
 
     if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
-        res = self:_build_array(op.size)
+        res = self:_build_array(DEFAULT_TABLE_SLOTS)
 
     elseif opcode == SIMDJSON_FFI_OPCODE_OBJECT then
-        res = self:_build_object(op.size)
+        res = self:_build_object(DEFAULT_TABLE_SLOTS)
 
     elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
         res = val.number

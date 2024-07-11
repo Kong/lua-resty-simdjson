@@ -23,8 +23,6 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
         ondemand::array a = value;
         state.frames.emplace(a.begin(), a.end());
 
-        state.ops[state.ops_n].size = a.count_elements();
-
         go_deeper = true;
 
         break;
@@ -35,8 +33,6 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
 
         ondemand::object o = value;
         state.frames.emplace(o.begin(), o.end());
-
-        state.ops[state.ops_n].size = o.count_fields();
 
         go_deeper = true;
 
