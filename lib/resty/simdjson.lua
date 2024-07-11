@@ -153,7 +153,6 @@ end
 function _M:_build(op)
     local res
     local opcode = op.opcode
-    local val = op.val
 
     if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
         res = self:_build_array(DEFAULT_TABLE_SLOTS)
@@ -162,13 +161,13 @@ function _M:_build(op)
         res = self:_build_object(DEFAULT_TABLE_SLOTS)
 
     elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
-        res = val.number
+        res = op.val.number
 
     elseif opcode == SIMDJSON_FFI_OPCODE_STRING then
-        res = ffi_string(val.str, op.size)
+        res = ffi_string(op.val.str, op.size)
 
     elseif opcode == SIMDJSON_FFI_OPCODE_BOOLEAN then
-        res = val.boolean == 1
+        res = op.val.boolean == 1
 
     elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
         res = ngx_null
