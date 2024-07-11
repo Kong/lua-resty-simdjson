@@ -120,6 +120,13 @@ int simdjson_ffi_parse(simdjson_ffi_state *state,
 
 
 extern "C"
+int simdjson_ffi_is_done(simdjson_ffi_state *state) {
+    bool f =  state->document.at_end();
+    return f;
+}
+
+
+extern "C"
 int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
     state->ops_n = 0;
 

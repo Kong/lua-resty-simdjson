@@ -89,6 +89,7 @@ typedef struct simdjson_ffi_state_t simdjson_ffi_state;
 simdjson_ffi_state *simdjson_ffi_state_new();
 simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state);
 void simdjson_ffi_state_free(simdjson_ffi_state *state);
+int simdjson_ffi_is_done(simdjson_ffi_state *state);
 int simdjson_ffi_parse(simdjson_ffi_state *state, const char *json, size_t len, char **errmsg);
 int simdjson_ffi_next(simdjson_ffi_state *state, char **errmsg);
 ]])
@@ -289,30 +290,37 @@ function _M:decode(json)
         return nil, "simdjson: error: " .. ffi_string(errmsg[0])
     end
 
+    local res
     local op = self.ops[0]
     local opcode = op.opcode
 
     if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
-        return self:_build_array(self.state)
+        res = self:_build_array(self.state)
 
     elseif opcode == SIMDJSON_FFI_OPCODE_OBJECT then
-        return self:_build_object(self.state)
+        res = self:_build_object(self.state)
 
     elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
-        return op.number
+        res = op.number
 
     elseif opcode == SIMDJSON_FFI_OPCODE_STRING then
-        return ffi_string(op.str, op.size)
+        res = ffi_string(op.str, op.size)
 
     elseif opcode == SIMDJSON_FFI_OPCODE_BOOLEAN then
-        return op.size == 1
+        res = op.size == 1
 
     elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
-        return ngx_null
+        res = ngx_null
 
     else
         assert(false) -- never reach here
     end
+
+    if res and C.simdjson_ffi_is_done(self.state) ~= 1 then
+        return nil, "simdjson: error: trailing content found"
+    end
+
+    return res
 end
 
 
