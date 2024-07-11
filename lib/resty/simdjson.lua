@@ -316,7 +316,7 @@ function _M:decode(json)
         assert(false) -- never reach here
     end
 
-    if res and C.simdjson_ffi_is_done(self.state) ~= 1 then
+    if res and res ~= ngx_null and C.simdjson_ffi_is_done(self.state) ~= 1 then
         return nil, "simdjson: error: trailing content found"
     end
 
