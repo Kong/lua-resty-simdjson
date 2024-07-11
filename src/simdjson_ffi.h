@@ -29,11 +29,20 @@ extern "C" {
 
     typedef struct {
         simdjson_ffi_opcode_e      opcode;
-        const char                *str;     /* value of string */
-        uint32_t                   size;    /* length of string or value of boolean */
-        double                     number;  /* value of number */
+        uint32_t                   size;
+
+        union {
+            const char            *str;
+            double                 number;
+            uint32_t               boolean;
+        }                          val;
     } simdjson_ffi_op_t;
 }
+
+
+static_assert(sizeof(uintptr_t) == 8, "uintptr_t should be 8 bytes");
+static_assert(sizeof(simdjson_ffi_opcode_e) <= 4, "simdjson_ffi_opcode_e should be less than 4 bytes");
+static_assert(sizeof(simdjson_ffi_op_t) == 16, "simdjson_ffi_op_t should be 16 bytes");
 
 
 enum class simdjson_ffi_resume_state : unsigned char {
