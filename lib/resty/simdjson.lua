@@ -150,6 +150,37 @@ function _M:destroy()
 end
 
 
+function _M:_build(op)
+    local res
+    local opcode = op.opcode
+    local val = op.val
+
+    if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
+        res = self:_build_array(DEFAULT_TABLE_SLOTS)
+
+    elseif opcode == SIMDJSON_FFI_OPCODE_OBJECT then
+        res = self:_build_object(DEFAULT_TABLE_SLOTS)
+
+    elseif opcode == SIMDJSON_FFI_OPCODE_NUMBER then
+        res = val.number
+
+    elseif opcode == SIMDJSON_FFI_OPCODE_STRING then
+        res = ffi_string(val.str, op.size)
+
+    elseif opcode == SIMDJSON_FFI_OPCODE_BOOLEAN then
+        res = val.boolean == 1
+
+    elseif opcode == SIMDJSON_FFI_OPCODE_NULL then
+        res = ngx_null
+
+    else
+        assert(false) -- never reach here
+    end
+
+    return res
+end
+
+
 function _M:_build_array(count)
     if not self.state then
         error("already destroyed", 2)
@@ -165,7 +196,7 @@ function _M:_build_array(count)
             local ops_index = self.ops_index
             local op = ops[ops_index]
             local opcode = op.opcode
-            local val = op.val
+            --local val = op.val
 
             self.ops_index = ops_index + 1
 
@@ -173,6 +204,8 @@ function _M:_build_array(count)
                 return tbl
             end
 
+            tbl[n] = self:_build(op)
+            --[[
             if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
                 tbl[n] = self:_build_array(DEFAULT_TABLE_SLOTS)
 
@@ -194,6 +227,7 @@ function _M:_build_array(count)
             else
                 assert(false) -- never reach here
             end
+            --]]
 
             n = n + 1
         end
@@ -227,7 +261,7 @@ function _M:_build_object(count)
             local ops_index = self.ops_index
             local op = ops[ops_index]
             local opcode = op.opcode
-            local val = op.val
+            --local val = op.val
 
             self.ops_index = ops_index + 1
 
@@ -241,10 +275,12 @@ function _M:_build_object(count)
             if not key then
                 -- object key must be string
                 assert(opcode == SIMDJSON_FFI_OPCODE_STRING)
-                key = ffi_string(val.str, op.size)
+                key = ffi_string(op.val.str, op.size)
 
             else
                 -- value
+                tbl[key] = self:_build(op)
+                --[[
                 if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
                     tbl[key] = self:_build_array(DEFAULT_TABLE_SLOTS)
 
@@ -266,6 +302,7 @@ function _M:_build_object(count)
                 else
                     assert(false) -- never reach here
                 end
+                --]]
 
                 key = nil
             end
@@ -297,11 +334,12 @@ function _M:decode(json)
         return nil, "simdjson: error: " .. ffi_string(errmsg[0])
     end
 
-    local res
     local op = self.ops[0]
-    local opcode = op.opcode
-    local val = op.val
+    --local opcode = op.opcode
+    --local val = op.val
 
+    local res = self:_build(op)
+    --[[
     if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
         res = self:_build_array(DEFAULT_TABLE_SLOTS)
 
@@ -323,6 +361,7 @@ function _M:decode(json)
     else
         assert(false) -- never reach here
     end
+    --]]
 
     if res and res ~= ngx_null and C.simdjson_ffi_is_eof(self.state) ~= 1 then
         return nil, "simdjson: error: trailing content found"
