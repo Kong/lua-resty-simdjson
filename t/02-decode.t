@@ -292,7 +292,13 @@ ok
             local v = parser:decode([[{ "a":True }]])
             assert(v == nil)
 
-            local v = parser:decode([[{ "a":1 }{"b": 2 }]])
+            local v = parser:decode([[1,2,3]])
+            assert(v == nil)
+
+            local v = parser:decode([[{ "a":1 }{ "b":2 }]])
+            assert(v == nil)
+
+            local v = parser:decode("[1,2][3,4]")
             assert(v == nil)
 
             ngx.say("ok")
