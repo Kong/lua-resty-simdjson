@@ -30,21 +30,19 @@ extern "C" {
     typedef struct {
         simdjson_ffi_opcode_e      opcode;
         uint32_t                   size;
+
+        union {
+            const char            *str;
+            double                 number;
+            uint32_t               boolean;
+        }                          val;
     } simdjson_ffi_op_t;
-
-
-    typedef union {
-        const char                *str;
-        double                     number;
-        uint32_t                   boolean;
-    } simdjson_ffi_val_t;
 }
 
 
-static_assert(sizeof(uintptr_t) == 8, "uintptr_t should be 64 bits");
-static_assert(sizeof(simdjson_ffi_opcode_e) <= 4, "simdjson_ffi_opcode_e should be less than 32 bits");
-static_assert(sizeof(simdjson_ffi_op_t) == 8, "simdjson_ffi_op_t should be 64 bits");
-static_assert(sizeof(simdjson_ffi_val_t) == 8, "simdjson_ffi_val_t should be 64 bits");
+static_assert(sizeof(uintptr_t) == 8, "uintptr_t should be 8 bytes");
+static_assert(sizeof(simdjson_ffi_opcode_e) <= 4, "simdjson_ffi_opcode_e should be less than 4 bytes");
+static_assert(sizeof(simdjson_ffi_op_t) == 16, "simdjson_ffi_op_t should be 16 bytes");
 
 
 enum class simdjson_ffi_resume_state : unsigned char {
@@ -88,7 +86,6 @@ struct simdjson_ffi_state_t {
     simdjson::ondemand::parser            parser;
     simdjson::ondemand::document          document;
     simdjson_ffi_op_t                     ops[SIMDJSON_FFI_BATCH_SIZE];
-    simdjson_ffi_val_t                    vals[SIMDJSON_FFI_BATCH_SIZE];
     size_t                                ops_n;
     std::stack<simdjson_ffi_stack_frame>  frames;
     simdjson::padded_string               json;

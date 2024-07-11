@@ -80,19 +80,18 @@ typedef enum {
 typedef struct {
     simdjson_ffi_opcode_e      opcode;
     uint32_t                   size;
-} simdjson_ffi_op_t;
 
-typedef union {
-    const char                *str;
-    double                     number;
-    uint32_t                   boolean;
-} simdjson_ffi_val_t;
+    union {
+        const char            *str;
+        double                 number;
+        uint32_t               boolean;
+    }                          val;
+} simdjson_ffi_op_t;
 
 typedef struct simdjson_ffi_state_t simdjson_ffi_state;
 
 simdjson_ffi_state *simdjson_ffi_state_new();
 simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state);
-simdjson_ffi_val_t *simdjson_ffi_state_get_vals(simdjson_ffi_state *state);
 void simdjson_ffi_state_free(simdjson_ffi_state *state);
 int simdjson_ffi_is_eof(simdjson_ffi_state *state);
 int simdjson_ffi_parse(simdjson_ffi_state *state, const char *json, size_t len, char **errmsg);
@@ -132,7 +131,6 @@ function _M.new(yieldable)
         ops_size = 0,
         state = ffi_gc(state, C.simdjson_ffi_state_free),
         ops = C.simdjson_ffi_state_get_ops(state),
-        vals = C.simdjson_ffi_state_get_vals(state),
         yieldable = yieldable,
         number_precision = "%.16g",  -- up to 16 decimals
     }
@@ -149,7 +147,6 @@ function _M:destroy()
     C.simdjson_ffi_state_free(ffi_gc(self.state, nil))
     self.state = nil
     self.ops = nil
-    self.vals = nil
 end
 
 
@@ -161,15 +158,14 @@ function _M:_build_array(count)
     local n = 1
     local tbl = table_new(count, 0)
     local ops = self.ops
-    local vals = self.vals
     local yieldable = self.yieldable
 
     repeat
         while self.ops_index < self.ops_size do
             local ops_index = self.ops_index
             local op = ops[ops_index]
-            local val = vals[ops_index]
             local opcode = op.opcode
+            local val = op.val
 
             self.ops_index = ops_index + 1
 
@@ -224,15 +220,14 @@ function _M:_build_object(count)
     local tbl = table_new(0, count)
     local key
     local ops = self.ops
-    local vals = self.vals
     local yieldable = self.yieldable
 
     repeat
         while self.ops_index < self.ops_size do
             local ops_index = self.ops_index
             local op = ops[ops_index]
-            local val = vals[ops_index]
             local opcode = op.opcode
+            local val = op.val
 
             self.ops_index = ops_index + 1
 
@@ -304,8 +299,8 @@ function _M:decode(json)
 
     local res
     local op = self.ops[0]
-    local val = self.vals[0]
     local opcode = op.opcode
+    local val = op.val
 
     if opcode == SIMDJSON_FFI_OPCODE_ARRAY then
         res = self:_build_array(DEFAULT_TABLE_SLOTS)
