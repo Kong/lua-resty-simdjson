@@ -242,7 +242,6 @@ function _M:_build_object(count)
                 return tbl
             end
 
-
             if not key then
                 -- object key must be string
                 assert(opcode == SIMDJSON_FFI_OPCODE_STRING)
@@ -285,7 +284,6 @@ function _M:decode(json)
     local op = self.ops[0]
 
     local res = self:_build(op)
-
     if res and res ~= ngx_null and C.simdjson_ffi_is_eof(self.state) ~= 1 then
         return nil, "simdjson: error: trailing content found"
     end
