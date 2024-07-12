@@ -55,7 +55,7 @@ static_assert(sizeof(simdjson_ffi_op_t) == 16,
               "simdjson_ffi_op_t should be 16 bytes");
 
 // If the `SIMDJSON_FFI_BATCH_SIZE` is larger than 2^32,
-// we might get a float number in Lua JIT.
+// we might get a float number in LuaJIT.
 // The design goal of this library doesn't need such a large batch,
 // so this assertion is just in case.
 static_assert(SIMDJSON_FFI_BATCH_SIZE <= std::numeric_limits<uint32_t>::max(),
