@@ -140,13 +140,15 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
 
         switch (frame.state) {
             case simdjson_ffi_resume_state::array: {
+                auto &it = frame.it.array.current;
+
                 if (frame.processing) {
-                    ++frame.it.array.current;
+                    ++it;
                     frame.processing = false;
                 }
 
                 // resume array iteration
-                for (auto &it = frame.it.array.current; it != frame.it.array.end; ++it) {
+                for (; it != frame.it.array.end; ++it) {
                     ondemand::value value = *it;
 
                     if (simdjson_process_value(*state, value)) {
@@ -169,13 +171,15 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
             }
 
             case simdjson_ffi_resume_state::object: {
+                auto &it = frame.it.object.current;
+
                 if (frame.processing) {
-                    ++frame.it.object.current;
+                    ++it;
                     frame.processing = false;
                 }
 
                 // resume object iteration
-                for (auto &it = frame.it.object.current; it != frame.it.object.end; ++it) {
+                for (; it != frame.it.object.end; ++it) {
                     auto field = *it;
                     std::string_view key = field.unescaped_key();
 
