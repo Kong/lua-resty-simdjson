@@ -9,6 +9,7 @@
 
 
 #include <stack>
+#include <limits>
 
 
 #define SIMDJSON_FFI_BATCH_SIZE 2048
@@ -42,10 +43,23 @@ extern "C" {
 
 static_assert(sizeof(uintptr_t) == 8,
               "uintptr_t should be 8 bytes");
+
+// We assume this enum takes 4 bytes,
+// so we could utilize the alignment rules to save 4 bytes for `simdjson_ffi_op_t`.
 static_assert(sizeof(simdjson_ffi_opcode_e) <= 4,
               "simdjson_ffi_opcode_e should be less than 4 bytes");
+
+// This struct was designed carefully for minimal memory usage,
+// asserting it here to avoid breaking this design unintentionally.
 static_assert(sizeof(simdjson_ffi_op_t) == 16,
               "simdjson_ffi_op_t should be 16 bytes");
+
+// If the `SIMDJSON_FFI_BATCH_SIZE` is larger than 2^32,
+// we might get a float number in LuaJIT.
+// The design goal of this library doesn't need such a large batch,
+// so this assertion is just in case.
+static_assert(SIMDJSON_FFI_BATCH_SIZE <= std::numeric_limits<uint32_t>::max(),
+              "SIMDJSON_FFI_BATCH_SIZE should be less than 2^32");
 
 
 enum class simdjson_ffi_resume_state : unsigned char {
