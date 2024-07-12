@@ -146,12 +146,11 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
                 }
 
                 // resume array iteration
-                for (auto it = frame.it.array.current; it != frame.it.array.end; ++it) {
+                for (auto &it = frame.it.array.current; it != frame.it.array.end; ++it) {
                     ondemand::value value = *it;
 
                     if (simdjson_process_value(*state, value)) {
                         // save state, go deeper
-                        frame.it.array.current = it;
                         frame.processing = true;
 
                         break;
@@ -160,7 +159,6 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
                     if (state->ops_n >= SIMDJSON_FFI_BATCH_SIZE) {
                         // array can use the last of the slots, no need to
                         // reserve two slots like object below
-                        frame.it.array.current = it;
                         frame.processing = true;
 
                         return state->ops_n;
@@ -177,7 +175,7 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
                 }
 
                 // resume object iteration
-                for (auto it = frame.it.object.current; it != frame.it.object.end; ++it) {
+                for (auto &it = frame.it.object.current; it != frame.it.object.end; ++it) {
                     auto field = *it;
                     std::string_view key = field.unescaped_key();
 
@@ -190,14 +188,12 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
 
                     if (simdjson_process_value(*state, field.value())) {
                         // save state, go deeper
-                        frame.it.object.current = it;
                         frame.processing = true;
 
                         break;
                     }
 
                     if (state->ops_n >= SIMDJSON_FFI_BATCH_SIZE - 1) {
-                        frame.it.object.current = it;
                         frame.processing = true;
 
                         return state->ops_n;
