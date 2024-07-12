@@ -21,7 +21,7 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_ARRAY;
 
         ondemand::array a = value;
-        state.frames.emplace(a.begin(), a.end());
+        state.frames.emplace(a);
 
         go_deeper = true;
 
@@ -32,7 +32,7 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_OBJECT;
 
         ondemand::object o = value;
-        state.frames.emplace(o.begin(), o.end());
+        state.frames.emplace(o);
 
         go_deeper = true;
 
@@ -140,18 +140,19 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
 
         switch (frame.state) {
             case simdjson_ffi_resume_state::array: {
+                auto &it = frame.it.array.current;
+
                 if (frame.processing) {
-                    ++frame.it.array.current;
+                    ++it;
                     frame.processing = false;
                 }
 
                 // resume array iteration
-                for (auto it = frame.it.array.current; it != frame.it.array.end; ++it) {
+                for (; it != frame.it.array.end; ++it) {
                     ondemand::value value = *it;
 
                     if (simdjson_process_value(*state, value)) {
                         // save state, go deeper
-                        frame.it.array.current = it;
                         frame.processing = true;
 
                         break;
@@ -160,7 +161,6 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
                     if (state->ops_n >= SIMDJSON_FFI_BATCH_SIZE) {
                         // array can use the last of the slots, no need to
                         // reserve two slots like object below
-                        frame.it.array.current = it;
                         frame.processing = true;
 
                         return state->ops_n;
@@ -171,13 +171,15 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
             }
 
             case simdjson_ffi_resume_state::object: {
+                auto &it = frame.it.object.current;
+
                 if (frame.processing) {
-                    ++frame.it.object.current;
+                    ++it;
                     frame.processing = false;
                 }
 
                 // resume object iteration
-                for (auto it = frame.it.object.current; it != frame.it.object.end; ++it) {
+                for (; it != frame.it.object.end; ++it) {
                     auto field = *it;
                     std::string_view key = field.unescaped_key();
 
@@ -190,14 +192,12 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
 
                     if (simdjson_process_value(*state, field.value())) {
                         // save state, go deeper
-                        frame.it.object.current = it;
                         frame.processing = true;
 
                         break;
                     }
 
                     if (state->ops_n >= SIMDJSON_FFI_BATCH_SIZE - 1) {
-                        frame.it.object.current = it;
                         frame.processing = true;
 
                         return state->ops_n;
