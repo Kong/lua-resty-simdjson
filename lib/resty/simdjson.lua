@@ -295,13 +295,17 @@ function _M:decode(json)
 
     local op = self.ops[0]
 
-    local res = self:_build(op)
-    if res and res ~= ngx_null and C.simdjson_ffi_is_eof(self.state) ~= 1 then
-        self.decoding = false
-        return nil, "simdjson: error: trailing content found"
-    end
+    local res, err = self:_build(op)
 
     self.decoding = false
+
+    if err then
+        return nil, err
+    end
+
+    if res and res ~= ngx_null and C.simdjson_ffi_is_eof(self.state) ~= 1 then
+        return nil, "simdjson: error: trailing content found"
+    end
 
     return res
 end
