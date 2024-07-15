@@ -81,6 +81,19 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
 }
 
 
+template<>
+bool simdjson_process_value(simdjson_ffi_state &state, std::string_view&& value) {
+    state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_STRING;
+
+    state.ops[state.ops_n].size = value.size();
+    state.ops[state.ops_n].val.str = value.data();
+
+    state.ops_n++;
+
+    return false;
+}
+
+
 extern "C"
 simdjson_ffi_state *simdjson_ffi_state_new() {
     return new(std::nothrow) simdjson_ffi_state();
@@ -181,11 +194,8 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
                 // resume object iteration
                 for (; it != frame.it.object.end; ++it) {
                     auto field = *it;
-                    auto key = field.unescaped_key().value();
 
-                    state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_STRING;
-                    state->ops[state->ops_n].size = key.size();
-                    state->ops[state->ops_n++].val.str = key.data();
+                    simdjson_process_value(*state, field.unescaped_key().value());
 
                     // this can not overflow, because we checked to make sure
                     // ops has at least 2 empty slots above
