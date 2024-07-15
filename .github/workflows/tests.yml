@@ -60,3 +60,11 @@ jobs:
         export PATH=${BASE_PATH}/openresty/bin:$PATH
         openresty -V
         make test OPENRESTY_PREFIX=${BASE_PATH}/openresty
+
+    - name: Run Valgrind
+      run: |
+        export PATH=${BASE_PATH}/openresty/bin:$PATH
+        export TEST_NGINX_VALGRIND='--num-callers=100 -q --tool=memcheck --leak-check=full --show-possibly-lost=no --gen-suppressions=all --suppressions=valgrind.suppress --track-origins=yes' TEST_NGINX_TIMEOUT=60 TEST_NGINX_SLEEP=1
+        export TEST_NGINX_USE_VALGRIND=1
+        openresty -V
+        make valgrind OPENRESTY_PREFIX=${BASE_PATH}/openresty
