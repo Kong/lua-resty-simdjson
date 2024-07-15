@@ -307,6 +307,9 @@ ok
             local v, err = parser:decode([[ { "bad unicode \u0f6 escape" } ]])
             assert(v == nil and err)
 
+            local v, err = parser:decode([[ { "bad unicode \udfff escape" } ]])
+            assert(v == nil and err)
+
             ngx.say("ok")
         }
     }
