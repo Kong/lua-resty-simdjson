@@ -347,3 +347,69 @@ ok
 
 
 
+=== TEST 9: run reentrant decode when not yieldable
+--- http_config eval: $::HttpConfig
+--- config
+    location = /t {
+        content_by_lua_block {
+            local simdjson = require("resty.simdjson")
+
+            local parser = simdjson.new()
+            assert(parser)
+
+            local str = "[".. string.rep("1,", 2100) .. "1]"
+
+            local t1 = ngx.thread.spawn(function()
+              parser:decode(str)
+            end)
+
+            local t2 = ngx.thread.spawn(function()
+              parser:decode(str)
+            end)
+
+            ngx.say("ok")
+        }
+    }
+--- request
+GET /t
+--- response_body
+ok
+--- no_error_log
+[error]
+[warn]
+[crit]
+
+
+
+=== TEST 10: can not run reentrant decode when yieldable
+--- http_config eval: $::HttpConfig
+--- config
+    location = /t {
+        content_by_lua_block {
+            local simdjson = require("resty.simdjson")
+
+            local parser = simdjson.new(true)
+            assert(parser)
+
+            local str = "[".. string.rep("1,", 2100) .. "1]"
+
+            local t1 = ngx.thread.spawn(function()
+              parser:decode(str)
+            end)
+
+            local ok, err = pcall(parser.decode, parser, str)
+            assert(not ok)
+            ngx.say(err)
+        }
+    }
+--- request
+GET /t
+--- response_body
+decode is not reentrant
+--- no_error_log
+[error]
+[warn]
+[crit]
+
+
+

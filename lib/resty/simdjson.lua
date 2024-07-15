@@ -145,7 +145,7 @@ function _M:destroy()
         error("already destroyed", 2)
     end
 
-    if self.yieldable and self.decoding then
+    if self.decoding then
         error("decoding, can not be destroyed", 2)
     end
 
