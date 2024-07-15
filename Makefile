@@ -37,3 +37,6 @@ clean:
 
 test: build
 	PATH=$(OPENRESTY_PREFIX)/nginx/sbin:$$PATH prove -r t/
+
+test: valgrind
+	PATH=$(OPENRESTY_PREFIX)/nginx/sbin:$$PATH prove -r t/ 2>&1 | tee /dev/stderr | grep -q "match-leak-kinds: definite" && exit 1 || exit 0
