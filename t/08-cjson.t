@@ -234,11 +234,15 @@ ok
 
             assert(type(obj1) == "table" and type(obj2) == "table")
             assert(obj1.menu.header == obj2.menu.header)
-            assert(obj1.menu.items[1].id == obj2.menu.items[1].id)
-            assert(obj1.menu.items[3] == obj2.menu.items[3] and obj1.menu.items[3] == ngx.null)
-            assert(obj1.menu.items[4].label== obj2.menu.items[4].label)
-            assert(obj1.menu.items[9].id == obj2.menu.items[9].id)
-            assert(obj1.menu.items[22].id == obj2.menu.items[22].id)
+
+            for i = 1, 22 do
+                if obj1.menu.items[i] == ngx.null then
+                    assert(obj1.menu.items[i] == obj2.menu.items[i])
+                else
+                    assert(obj1.menu.items[i].id == obj2.menu.items[i].id)
+                    assert(obj1.menu.items[i].label == obj2.menu.items[i].label)
+                end
+            end
 
             ngx.say("ok")
         }
@@ -278,13 +282,20 @@ ok
             local obj2 = parser:decode(parser:encode(obj1))
 
             assert(type(obj1) == "table" and type(obj2) == "table")
-            assert(obj1[1] == obj2[1] and obj1[1] == 0.110001)
-            assert(obj1[2] == obj2[2] and obj1[2] == 0.12345678910111)
-            assert(obj1[3] == obj2[3] and obj1[3] == 0.412454033640)
-            assert(obj1[4] == obj2[4] and obj1[4] == 2.6651441426902)
-            assert(obj1[5] == obj2[5] and obj1[5] == 2.718281828459)
-            assert(obj1[6] == obj2[6] and obj1[6] == 3.1415926535898)
-            assert(obj1[7] == obj2[7] and obj1[7] == 2.1406926327793)
+
+            local nums = {
+                0.110001,
+                0.12345678910111,
+                0.412454033640,
+                2.6651441426902,
+                2.718281828459,
+                3.1415926535898,
+                2.1406926327793,
+            }
+
+            for i, v in ipairs(nums) do
+                assert(obj1[i] == obj2[i] and obj1[i] == v)
+            end
 
             ngx.say("ok")
         }
@@ -390,14 +401,14 @@ ok
             local obj2 = parser:decode(parser:encode(obj1))
 
             assert(type(obj1) == "table" and type(obj2) == "table")
-            assert(obj1[1].precision == obj2[1].precision)
-            assert(obj1[1].Latitude == obj2[1].Latitude)
-            assert(obj1[1].Longitude == obj2[1].Longitude)
-            assert(obj1[1].Zip == obj2[1].Zip)
-            assert(obj1[2].precision == obj2[2].precision)
-            assert(obj1[2].Latitude == obj2[2].Latitude)
-            assert(obj1[2].Longitude == obj2[2].Longitude)
-            assert(obj1[2].Zip == obj2[2].Zip)
+
+            local fields = {"precision", "Latitude", "Longitude", "Address",
+                            "City", "State", "Zip", "Country",}
+
+            for i, f in ipairs(fields) do
+              assert(obj1[1][f] == obj2[1][f])
+              assert(obj1[2][f] == obj2[2][f])
+            end
 
             ngx.say("ok")
         }
