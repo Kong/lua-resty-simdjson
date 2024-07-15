@@ -274,32 +274,41 @@ ok
             local parser = simdjson.new()
             assert(parser)
 
-            local v = parser:decode([[{ "a":1, }]])
-            assert(v == nil)
+            local v, err = parser:decode([[{ "a":1, }]])
+            assert(v == nil and err)
 
-            local v = parser:decode([[{ "a":[1, 2.0 }]])
-            assert(v == nil)
+            local v, err = parser:decode([[{ "a":[1, 2.0 }]])
+            assert(v == nil and err)
 
-            local v = parser:decode([[{ "a":.9 }]])
-            assert(v == nil)
+            local v, err = parser:decode([[{ "a":.9 }]])
+            assert(v == nil and err)
 
-            local v = parser:decode([[{ "a":0x10 }]])
-            assert(v == nil)
+            local v, err = parser:decode([[{ "a":0x10 }]])
+            assert(v == nil and err)
 
-            local v = parser:decode([[{ "a":'???' }]])
-            assert(v == nil)
+            local v, err = parser:decode([[{ "a":'???' }]])
+            assert(v == nil and err)
 
-            local v = parser:decode([[{ "a":True }]])
-            assert(v == nil)
+            local v, err = parser:decode([[{ "a":True }]])
+            assert(v == nil and err)
 
-            local v = parser:decode([[1,2,3]])
-            assert(v == nil)
+            local v, err = parser:decode([[1,2,3]])
+            assert(v == nil and err)
 
-            local v = parser:decode([[{ "a":1 }{ "b":2 }]])
-            assert(v == nil)
+            local v, err = parser:decode([[{ "a":1 }{ "b":2 }]])
+            assert(v == nil and err)
 
-            local v = parser:decode("[1,2][3,4]")
-            assert(v == nil)
+            local v, err = parser:decode("[1,2][3,4]")
+            assert(v == nil and err)
+
+            local v, err = parser:decode([[ { "bad escape \q code" } ]])
+            assert(v == nil and err)
+
+            local v, err = parser:decode([[ { "bad unicode \u0f6 escape" } ]])
+            assert(v == nil and err)
+
+            local v, err = parser:decode([[ { "bad unicode \udfff escape" } ]])
+            assert(v == nil and err)
 
             ngx.say("ok")
         }
