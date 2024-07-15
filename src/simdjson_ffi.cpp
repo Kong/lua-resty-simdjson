@@ -149,7 +149,7 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
 
                 // resume array iteration
                 for (; it != frame.it.array.end; ++it) {
-                    ondemand::value value = *it;
+                    auto value = *it;
 
                     if (simdjson_process_value(*state, value)) {
                         // save state, go deeper
