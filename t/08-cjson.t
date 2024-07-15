@@ -109,9 +109,12 @@ ok
             assert(type(obj1) == "table" and type(obj2) == "table")
             assert(obj1.menu.id == obj2.menu.id)
             assert(obj1.menu.value == obj2.menu.value)
+
             assert(#obj1.menu.popup.menuitem == #obj2.menu.popup.menuitem)
-            assert(obj1.menu.popup.menuitem[1].value == obj2.menu.popup.menuitem[1].value)
-            assert(obj1.menu.popup.menuitem[2].onclick == obj2.menu.popup.menuitem[2].onclick)
+            for i = 1, 3 do
+                assert(obj1.menu.popup.menuitem[1].value == obj2.menu.popup.menuitem[1].value)
+                assert(obj1.menu.popup.menuitem[1].onclick == obj2.menu.popup.menuitem[1].onclick)
+            end
 
             ngx.say("ok")
         }
@@ -406,8 +409,8 @@ ok
                             "City", "State", "Zip", "Country",}
 
             for i, f in ipairs(fields) do
-              assert(obj1[1][f] == obj2[1][f])
-              assert(obj1[2][f] == obj2[2][f])
+                assert(obj1[1][f] == obj2[1][f])
+                assert(obj1[2][f] == obj2[2][f])
             end
 
             ngx.say("ok")
