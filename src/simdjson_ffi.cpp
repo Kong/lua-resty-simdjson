@@ -181,7 +181,7 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
                 // resume object iteration
                 for (; it != frame.it.object.end; ++it) {
                     auto field = *it;
-                    std::string_view key = field.unescaped_key();
+                    auto key = field.unescaped_key().value();
 
                     state->ops[state->ops_n].opcode = SIMDJSON_FFI_OPCODE_STRING;
                     state->ops[state->ops_n].size = key.size();
