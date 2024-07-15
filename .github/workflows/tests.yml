@@ -15,7 +15,7 @@ jobs:
         - openresty: "1.25.3.1"
 
     env:
-      JOBS: 1
+      JOBS: 2
 
       OPENRESTY: ${{ matrix.openresty }}
       CODE_PATH: ${{ github.workspace }}
