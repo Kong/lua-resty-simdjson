@@ -107,7 +107,7 @@ encode to avoid high latencies caused by encoding a very large object.
 
 ## simdjson.encode\_helper
 
-**syntax:** *json = parser:encode_helper(obj, cb)*
+**syntax:** *json = parser:encode_helper(obj, cb, ctx)*
 
 **context:** *any context*
 
