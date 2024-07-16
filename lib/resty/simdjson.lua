@@ -486,8 +486,12 @@ local function encode_callback(s, opts)
         return
     end
 
-    opts.iterations = opts.iterations - 1
-    if opts.iterations > 0 then
+    local iterations = opts.iterations
+
+    iterations = iterations - 1
+
+    if iterations > 0 then
+        opts.iterations = iterations
         return
     end
 
@@ -498,9 +502,6 @@ end
 
 
 function _M:encode(item)
-    --local buf = string_buffer.new()
-    --local iterations = MAX_ITERATIONS
-    --local yieldable = self.yieldable
     local opts = {
         buf = string_buffer.new(),
         iterations = MAX_ITERATIONS,
