@@ -129,6 +129,9 @@ int simdjson_ffi_parse(simdjson_ffi_state *state,
 } catch (simdjson_error &e) {
     *errmsg = e.what();
 
+    // clean up tmp string on error to save memory
+    state->json = padded_string();
+
     return SIMDJSON_FFI_ERROR;
 }
 
@@ -236,6 +239,9 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
 
 } catch (simdjson_error &e) {
     *errmsg = e.what();
+
+    // clean up tmp string on error to save memory
+    state->json = padded_string();
 
     return SIMDJSON_FFI_ERROR;
 }
