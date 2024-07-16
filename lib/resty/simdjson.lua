@@ -398,7 +398,7 @@ do
         return true, max
     end
 
-    function encode_helper(self, item, cb)
+    function encode_helper(self, item, cb, ...)
         local typ = type(item)
         if typ == "table" then
             local comma = false
@@ -406,25 +406,25 @@ do
             local is_array, count = table_isarray(item)
 
             if is_array then
-                cb("[")
+                cb("[", ...)
                 for i = 1, count do
                     local v = item[i] or ngx_null
 
                     if comma then
-                        cb(",")
+                        cb(",", ...)
                     end
 
                     comma = true
 
-                    local res, err = encode_helper(self, v, cb)
+                    local res, err = encode_helper(self, v, cb, ...)
                     if not res then
                         return nil, err
                     end
                 end
-                cb("]")
+                cb("]", ...)
 
             else
-                cb("{")
+                cb("{", ...)
                 for k, v in pairs(item) do
                     local kt = type(k)
                     if kt ~= "string" and kt ~= "number" then
@@ -433,38 +433,38 @@ do
                     k = tostring(k)
 
                     if comma then
-                        cb(",")
+                        cb(",", ...)
                     end
 
                     comma = true
 
-                    assert(encode_helper(self, k, cb))
+                    assert(encode_helper(self, k, cb, ...))
 
-                    cb(":")
+                    cb(":", ...)
 
-                    local res, err = encode_helper(self, v, cb)
+                    local res, err = encode_helper(self, v, cb, ...)
                     if not res then
                         return nil, err
                     end
                 end
-                cb("}")
+                cb("}", ...)
             end
 
         elseif typ == "string" then
-            cb("\"")
+            cb("\"", ...)
             for i = 1, #item do
-                cb(ESCAPE_TABLE[string_byte(item, i)])
+                cb(ESCAPE_TABLE[string_byte(item, i)], ...)
             end
-            cb("\"")
+            cb("\"", ...)
 
         elseif typ == "number" then
-            cb(self.number_precision:format(item))
+            cb(self.number_precision:format(item), ...)
 
         elseif typ == "boolean" then
-            cb(tostring(item))
+            cb(tostring(item), ...)
 
         elseif item == ngx_null then
-            cb("null")
+            cb("null", ...)
 
         else
             return nil, "unsupported data type: " .. typ
@@ -479,32 +479,40 @@ _M.encode_helper = encode_helper
 local MAX_ITERATIONS = 2048
 
 
+local function encode_callback(s, opts)
+    opts.buf:put(s)
+
+    if not opts.yieldable then
+        return
+    end
+
+    opts.iterations = opts.iterations - 1
+    if opts.iterations > 0 then
+        return
+    end
+
+    -- iterations <= 0, should reset iterations then yield
+    opts.iterations = MAX_ITERATIONS
+    yielding(true)
+end
+
+
 function _M:encode(item)
-    local buf = string_buffer.new()
-    local iterations = MAX_ITERATIONS
-    local yieldable = self.yieldable
+    --local buf = string_buffer.new()
+    --local iterations = MAX_ITERATIONS
+    --local yieldable = self.yieldable
+    local opts = {
+        buf = string_buffer.new(),
+        iterations = MAX_ITERATIONS,
+        yieldable = self.yieldable,
+    }
 
-    local res, err = encode_helper(self, item, function(s)
-        buf:put(s)
-
-        if not yieldable then
-            return
-        end
-
-        iterations = iterations - 1
-        if iterations > 0 then
-            return
-        end
-
-        -- iterations <= 0, should reset iterations then yield
-        iterations = MAX_ITERATIONS
-        yielding(true)
-    end)
+    local res, err = encode_helper(self, item, encode_callback, opts)
     if not res then
         return nil, err
     end
 
-    return buf:tostring()
+    return opts.buf:tostring()
 end
 
 
