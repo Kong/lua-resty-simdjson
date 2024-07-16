@@ -398,7 +398,7 @@ do
         return true, max
     end
 
-    function encode_helper(self, item, cb, opts)
+    function encode_helper(self, item, cb, ctx)
         local typ = type(item)
         if typ == "table" then
             local comma = false
@@ -406,25 +406,25 @@ do
             local is_array, count = table_isarray(item)
 
             if is_array then
-                cb("[", opts)
+                cb("[", ctx)
                 for i = 1, count do
                     local v = item[i] or ngx_null
 
                     if comma then
-                        cb(",", opts)
+                        cb(",", ctx)
                     end
 
                     comma = true
 
-                    local res, err = encode_helper(self, v, cb, opts)
+                    local res, err = encode_helper(self, v, cb, ctx)
                     if not res then
                         return nil, err
                     end
                 end
-                cb("]", opts)
+                cb("]", ctx)
 
             else
-                cb("{", opts)
+                cb("{", ctx)
                 for k, v in pairs(item) do
                     local kt = type(k)
                     if kt ~= "string" and kt ~= "number" then
@@ -433,38 +433,38 @@ do
                     k = tostring(k)
 
                     if comma then
-                        cb(",", opts)
+                        cb(",", ctx)
                     end
 
                     comma = true
 
-                    assert(encode_helper(self, k, cb, opts))
+                    assert(encode_helper(self, k, cb, ctx))
 
-                    cb(":", opts)
+                    cb(":", ctx)
 
-                    local res, err = encode_helper(self, v, cb, opts)
+                    local res, err = encode_helper(self, v, cb, ctx)
                     if not res then
                         return nil, err
                     end
                 end
-                cb("}", opts)
+                cb("}", ctx)
             end
 
         elseif typ == "string" then
-            cb("\"", opts)
+            cb("\"", ctx)
             for i = 1, #item do
-                cb(ESCAPE_TABLE[string_byte(item, i)], opts)
+                cb(ESCAPE_TABLE[string_byte(item, i)], ctx)
             end
-            cb("\"", opts)
+            cb("\"", ctx)
 
         elseif typ == "number" then
-            cb(self.number_precision:format(item), opts)
+            cb(self.number_precision:format(item), ctx)
 
         elseif typ == "boolean" then
-            cb(tostring(item), opts)
+            cb(tostring(item), ctx)
 
         elseif item == ngx_null then
-            cb("null", opts)
+            cb("null", ctx)
 
         else
             return nil, "unsupported data type: " .. typ
@@ -479,41 +479,41 @@ _M.encode_helper = encode_helper
 local MAX_ITERATIONS = 2048
 
 
-local function encode_callback(s, opts)
-    opts.buf:put(s)
+local function encode_callback(s, ctx)
+    ctx.buf:put(s)
 
-    if not opts.yieldable then
+    if not ctx.yieldable then
         return
     end
 
-    local iterations = opts.iterations
+    local iterations = ctx.iterations
 
     iterations = iterations - 1
 
     if iterations > 0 then
-        opts.iterations = iterations
+        ctx.iterations = iterations
         return
     end
 
     -- iterations <= 0, should reset iterations then yield
-    opts.iterations = MAX_ITERATIONS
+    ctx.iterations = MAX_ITERATIONS
     yielding(true)
 end
 
 
 function _M:encode(item)
-    local opts = {
+    local ctx = {
         buf = string_buffer.new(),
         iterations = MAX_ITERATIONS,
         yieldable = self.yieldable,
     }
 
-    local res, err = encode_helper(self, item, encode_callback, opts)
+    local res, err = encode_helper(self, item, encode_callback, ctx)
     if not res then
         return nil, err
     end
 
-    return opts.buf:tostring()
+    return ctx.buf:tostring()
 end
 
 
