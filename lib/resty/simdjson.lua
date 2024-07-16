@@ -398,7 +398,7 @@ do
         return true, max
     end
 
-    function encode_helper(self, item, cb, ...)
+    function encode_helper(self, item, cb, opts)
         local typ = type(item)
         if typ == "table" then
             local comma = false
@@ -406,25 +406,25 @@ do
             local is_array, count = table_isarray(item)
 
             if is_array then
-                cb("[", ...)
+                cb("[", opts)
                 for i = 1, count do
                     local v = item[i] or ngx_null
 
                     if comma then
-                        cb(",", ...)
+                        cb(",", opts)
                     end
 
                     comma = true
 
-                    local res, err = encode_helper(self, v, cb, ...)
+                    local res, err = encode_helper(self, v, cb, opts)
                     if not res then
                         return nil, err
                     end
                 end
-                cb("]", ...)
+                cb("]", opts)
 
             else
-                cb("{", ...)
+                cb("{", opts)
                 for k, v in pairs(item) do
                     local kt = type(k)
                     if kt ~= "string" and kt ~= "number" then
@@ -433,38 +433,38 @@ do
                     k = tostring(k)
 
                     if comma then
-                        cb(",", ...)
+                        cb(",", opts)
                     end
 
                     comma = true
 
-                    assert(encode_helper(self, k, cb, ...))
+                    assert(encode_helper(self, k, cb, opts))
 
-                    cb(":", ...)
+                    cb(":", opts)
 
-                    local res, err = encode_helper(self, v, cb, ...)
+                    local res, err = encode_helper(self, v, cb, opts)
                     if not res then
                         return nil, err
                     end
                 end
-                cb("}", ...)
+                cb("}", opts)
             end
 
         elseif typ == "string" then
-            cb("\"", ...)
+            cb("\"", opts)
             for i = 1, #item do
-                cb(ESCAPE_TABLE[string_byte(item, i)], ...)
+                cb(ESCAPE_TABLE[string_byte(item, i)], opts)
             end
-            cb("\"", ...)
+            cb("\"", opts)
 
         elseif typ == "number" then
-            cb(self.number_precision:format(item), ...)
+            cb(self.number_precision:format(item), opts)
 
         elseif typ == "boolean" then
-            cb(tostring(item), ...)
+            cb(tostring(item), opts)
 
         elseif item == ngx_null then
-            cb("null", ...)
+            cb("null", opts)
 
         else
             return nil, "unsupported data type: " .. typ
