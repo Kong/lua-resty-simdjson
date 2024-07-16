@@ -212,7 +212,7 @@ Transfer/sec:    330.05KB
 ## Memory
 The lua-resty-simdjson library will use more memory than lua-cjson during parsing due to various internal
 data structure simdjson allocates. The overhead is roughly equal to the size of the JSON string
-and can be freed immediately after parse with the `:destroy` method.
+and can be freed immediately after the call of `:decode()` or `:destroy()`.
 
 Encode will use less memory than lua-cjson if you use the streaming method
 with [`:encode_helper`](#simdjsonencode_helper), or approximately same amount of memory with
