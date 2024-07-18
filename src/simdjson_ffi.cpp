@@ -203,7 +203,7 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
                     auto field = *it;
 
                     // the return value is intentionally ignored
-                    // because it must be a string
+                    // because the key must be a string
                     simdjson_process_value(*state, field.unescaped_key());
 
                     // this can not overflow, because we checked to make sure
