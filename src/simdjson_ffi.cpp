@@ -122,6 +122,9 @@ int simdjson_ffi_parse(simdjson_ffi_state *state,
     state->document = state->parser.iterate(state->json);
     state->ops_n = 0;
 
+    // the return value is intentionally ignored
+    // because JSON could be either a bare scalar or
+    // array/object at top level
     simdjson_process_value(*state, state->document);
 
     return state->ops_n;
@@ -199,6 +202,8 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
                 for (; it != frame.it.object.end; ++it) {
                     auto field = *it;
 
+                    // the return value is intentionally ignored
+                    // because the key must be a string
                     simdjson_process_value(*state, field.unescaped_key());
 
                     // this can not overflow, because we checked to make sure
