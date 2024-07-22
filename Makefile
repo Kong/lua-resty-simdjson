@@ -6,7 +6,7 @@ else
 SHLIB_EXT=so
 endif
 
-ifeq ($(debug), true)
+ifeq ($(DEBUG), true)
 CXXOPTS=-ggdb -O0 -DSIMDJSON_DEVELOPMENT_CHECKS
 else
 CXXOPTS=-ggdb -O3 -DNDEBUG
