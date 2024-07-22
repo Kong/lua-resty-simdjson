@@ -202,9 +202,13 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
                 for (; it != frame.it.object.end; ++it) {
                     auto field = *it;
 
+#if SIMDJSON_DEVELOPMENT_CHECKS
+                    SIMDJSON_DEVELOPMENT_ASSERT(!simdjson_process_value(*state, field.unescaped_key()));
+#else
                     // the return value is intentionally ignored
                     // because the key must be a string
                     simdjson_process_value(*state, field.unescaped_key());
+#endif
 
                     // this can not overflow, because we checked to make sure
                     // ops has at least 2 empty slots above

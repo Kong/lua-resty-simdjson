@@ -6,6 +6,12 @@ else
 SHLIB_EXT=so
 endif
 
+ifeq ($(DEBUG), true)
+CXXOPTS=-ggdb -O0 -DSIMDJSON_DEVELOPMENT_CHECKS
+else
+CXXOPTS=-ggdb -O3 -DNDEBUG
+endif
+
 OPENRESTY_PREFIX=/usr/local/openresty
 
 #LUA_VERSION := 5.1
@@ -13,9 +19,7 @@ PREFIX ?=          /usr/local
 LUA_LIB_DIR ?=     $(PREFIX)/lib/lua/$(LUA_VERSION)
 INSTALL ?= install
 
-#CXXOPTS=-ggdb -O0 -DSIMDJSON_DEVELOPMENT_CHECKS
 CXX=c++
-CXXOPTS=-ggdb -O3 -DNDEBUG
 
 build: libsimdjson_ffi.$(SHLIB_EXT)
 
