@@ -127,6 +127,7 @@ int simdjson_ffi_parse(simdjson_ffi_state *state,
 
     SIMDJSON_DEVELOPMENT_ASSERT(state);
     SIMDJSON_DEVELOPMENT_ASSERT(json);
+    SIMDJSON_DEVELOPMENT_ASSERT(errmsg);
 
     state->json = padded_string(json, len);
 
@@ -163,6 +164,7 @@ int simdjson_ffi_is_eof(simdjson_ffi_state *state) {
 extern "C"
 int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
     SIMDJSON_DEVELOPMENT_ASSERT(state);
+    SIMDJSON_DEVELOPMENT_ASSERT(errmsg);
 
     state->ops_n = 0;
 
