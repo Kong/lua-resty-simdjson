@@ -190,6 +190,11 @@ _M.encode_helper = encode_helper
 local MAX_ITERATIONS = 2048
 
 
+local function yielding()
+    ngx_sleep(0)
+end
+
+
 local function encode_callback(s, ctx)
     ctx.buf:put(s)
 
@@ -209,7 +214,7 @@ local function encode_callback(s, ctx)
     -- iterations <= 0, should reset iterations then yield
     ctx.iterations = MAX_ITERATIONS
 
-    ngx_sleep(0)
+    yielding()
 end
 
 
