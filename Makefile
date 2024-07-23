@@ -24,7 +24,8 @@ CXX=c++
 build: libsimdjson_ffi.$(SHLIB_EXT)
 
 install: build
-	$(INSTALL) -m 664 lib/resty/*.lua $(DESTDIR)$(LUA_LIB_DIR)/resty/
+	$(INSTALL) -d $(DESTDIR)/$(LUA_LIB_DIR)/resty/simdjson/
+	$(INSTALL) -m 664 lib/resty/simdjson/*.lua $(DESTDIR)$(LUA_LIB_DIR)/resty/simdjson/
 	$(INSTALL) -m 775 ./libsimdjson_ffi.$(SHLIB_EXT) $(DESTDIR)$(LUA_LIB_DIR)/
 
 libsimdjson_ffi.$(SHLIB_EXT): simdjson.o libsimdjson_ffi.o
