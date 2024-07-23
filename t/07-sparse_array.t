@@ -10,7 +10,7 @@ plan tests => repeat_each() * blocks() * 5;
 my $pwd = cwd();
 
 our $HttpConfig = qq{
-    lua_package_path "$pwd/lib/?.lua;;";
+    lua_package_path "$pwd/lib/?/init.lua;$pwd/lib/?.lua;;";
     lua_package_cpath "$pwd/?.so;;";
 };
 
