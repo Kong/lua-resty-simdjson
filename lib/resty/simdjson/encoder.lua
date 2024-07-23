@@ -8,6 +8,7 @@ local _MT = { __index = _M, }
 local type = type
 local assert = assert
 local setmetatable = setmetatable
+local ngx_null = ngx.null
 local ngx_sleep = ngx.sleep
 
 
