@@ -213,7 +213,7 @@ local function encode_callback(s, ctx)
 end
 
 
-function _M:encode(item)
+function _M:process(item)
     local ctx = {
         buf = string_buffer.new(),
         iterations = MAX_ITERATIONS,

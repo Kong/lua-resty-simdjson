@@ -196,7 +196,7 @@ function _M:_build_object(count)
 end
 
 
-function _M:decode(json)
+function _M:process(json)
     assert(type(json) == "string")
 
     if not self.state then

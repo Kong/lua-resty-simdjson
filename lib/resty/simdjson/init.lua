@@ -25,12 +25,12 @@ end
 
 
 function _M:decode(json)
-    return self.decoder:decode(json)
+    return self.decoder:process(json)
 end
 
 
 function _M:encode(item)
-    return self.encoder:encode(item)
+    return self.encoder:process(item)
 end
 
 
