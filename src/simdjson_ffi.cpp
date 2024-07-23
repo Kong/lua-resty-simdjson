@@ -97,18 +97,26 @@ bool simdjson_process_value(simdjson_ffi_state &state, simdjson_result<std::stri
 
 extern "C"
 simdjson_ffi_state *simdjson_ffi_state_new() {
-    return new(std::nothrow) simdjson_ffi_state();
+    auto state = new(std::nothrow) simdjson_ffi_state();
+
+    SIMDJSON_DEVELOPMENT_ASSERT(state);
+
+    return state;
 }
 
 
 extern "C"
 simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state) {
+    SIMDJSON_DEVELOPMENT_ASSERT(state);
+
     return state->ops;
 }
 
 
 extern "C"
 void simdjson_ffi_state_free(simdjson_ffi_state *state) {
+    SIMDJSON_DEVELOPMENT_ASSERT(state);
+
     delete state;
 }
 
@@ -116,6 +124,9 @@ void simdjson_ffi_state_free(simdjson_ffi_state *state) {
 extern "C"
 int simdjson_ffi_parse(simdjson_ffi_state *state,
     const char *json, size_t len, const char **errmsg) try {
+
+    SIMDJSON_DEVELOPMENT_ASSERT(state);
+    SIMDJSON_DEVELOPMENT_ASSERT(json);
 
     state->json = padded_string(json, len);
 
@@ -126,6 +137,8 @@ int simdjson_ffi_parse(simdjson_ffi_state *state,
     // because JSON could be either a bare scalar or
     // array/object at top level
     simdjson_process_value(*state, state->document);
+
+    SIMDJSON_DEVELOPMENT_ASSERT(state->ops_n == 1);
 
     return state->ops_n;
 
@@ -141,12 +154,16 @@ int simdjson_ffi_parse(simdjson_ffi_state *state,
 
 extern "C"
 int simdjson_ffi_is_eof(simdjson_ffi_state *state) {
+    SIMDJSON_DEVELOPMENT_ASSERT(state);
+
     return state->document.at_end();
 }
 
 
 extern "C"
 int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
+    SIMDJSON_DEVELOPMENT_ASSERT(state);
+
     state->ops_n = 0;
 
     while (!state->frames.empty()) {
@@ -240,6 +257,8 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
             state->ops[state->ops_n++].opcode = SIMDJSON_FFI_OPCODE_RETURN;
         }
     }
+
+    SIMDJSON_DEVELOPMENT_ASSERT(state->frames.empty());
 
     // we are done! clean up the tmp string to save memory
     state->json = padded_string();
