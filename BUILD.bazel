@@ -21,7 +21,7 @@ filegroup(
 
 
 cc_library(
-    name = "libsimdjson_ffi",
+    name = "simdjson",
     srcs = [":all_srcs"],
     visibility = ["//visibility:public"],
 )
