@@ -2,7 +2,7 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-def simdjson_repositories():
+def simdjson_ffi_repositories():
     http_archive(
         name = "bazel_skylib",
         sha256 = "cd55a062e763b9349921f0f5db8c3933288dc8ba4f76dd9416aac68acee3cb94",

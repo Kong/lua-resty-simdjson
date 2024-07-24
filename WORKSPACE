@@ -1,5 +1,5 @@
-workspace(name = "simdjson")
+workspace(name = "simdjson_ffi")
 
-load("//build:repos.bzl", "simdjson_repositories")
+load("//build:repos.bzl", "simdjson_ffi_repositories")
 
-simdjson_repositories()
+simdjson_ffi_repositories()
