@@ -11,7 +11,7 @@ filegroup(
 )
 
 cc_library(
-    name = "lua_resty_simdjson_ffi",
+    name = "libsimdjson_ffi",
     srcs = [":all_srcs"],
     visibility = ["//visibility:public"],
 )
