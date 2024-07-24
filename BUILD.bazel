@@ -21,10 +21,15 @@ filegroup(
 
 
 cc_library(
-    name = "simdjson_ffi",
+    name = "simdjson_lib",
     srcs = [":all_srcs"],
     copts = ["-O3", "-DNDEBUG"],
-    linkopts = ["-shared"],
     visibility = ["//visibility:public"],
 )
 
+
+cc_shared_library(
+    name = "simdjson_ffi",
+    deps = [":simdjson_lib"],
+    visibility = ["//visibility:public"],
+)
