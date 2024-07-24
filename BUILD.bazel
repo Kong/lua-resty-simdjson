@@ -24,7 +24,6 @@ cc_library(
     name = "simdjson_lib",
     srcs = [":all_srcs"],
     copts = ["-O3", "-DNDEBUG"],
-    visibility = ["//visibility:public"],
 )
 
 
