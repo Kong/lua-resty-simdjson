@@ -102,8 +102,9 @@ simdjson_ffi_state *simdjson_ffi_state_new() {
 extern "C"
 simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state) {
     SIMDJSON_DEVELOPMENT_ASSERT(state);
+    SIMDJSON_DEVELOPMENT_ASSERT(state->ops.size() == SIMDJSON_FFI_BATCH_SIZE);
 
-    return state->ops;
+    return state->ops.data();
 }
 
 

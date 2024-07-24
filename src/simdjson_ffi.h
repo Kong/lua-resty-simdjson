@@ -2,6 +2,7 @@
 #define SIMDJSON_FFI_H
 
 
+#include <vector>
 #include <stack>
 #include <limits>
 
@@ -93,7 +94,7 @@ struct simdjson_ffi_stack_frame {
 struct simdjson_ffi_state_t {
     simdjson::ondemand::parser            parser;
     simdjson::ondemand::document          document;
-    simdjson_ffi_op_t                     ops[SIMDJSON_FFI_BATCH_SIZE];
+    std::vector<simdjson_ffi_op_t>        ops{SIMDJSON_FFI_BATCH_SIZE};
     size_t                                ops_n;
     std::stack<simdjson_ffi_stack_frame>  frames;
     simdjson::padded_string               json;
