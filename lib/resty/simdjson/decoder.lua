@@ -48,7 +48,7 @@ function _M.new(yieldable)
         ops_index = 0,
         ops_size = 0,
         state = ffi_gc(state, C.simdjson_ffi_state_free),
-        ops = C.simdjson_ffi_state_get_ops(state),
+        ops = nil,  -- reserved for decode
         yieldable = yieldable,
         decoding = false,
     }
@@ -209,6 +209,9 @@ function _M:process(json)
     if self.yieldable and self.decoding then
         error("decode is not reentrant", 2)
     end
+
+    -- allocate array memory on-demond
+    self.ops = assert(C.simdjson_ffi_state_get_ops(self.state))
 
     self.decoding = true
 
