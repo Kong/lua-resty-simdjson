@@ -10,6 +10,16 @@ filegroup(
     ),
 )
 
+filegroup(
+    name = "lualib_srcs",
+    srcs = glob([
+        "lualib/**/*.lua",
+        "lib/**/*.lua",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+
 cc_library(
     name = "libsimdjson_ffi",
     srcs = [":all_srcs"],
