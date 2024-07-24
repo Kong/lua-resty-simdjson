@@ -1,0 +1,18 @@
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        include = [
+            "src/**",
+        ],
+        exclude = [
+            "*.bazel",
+        ],
+    ),
+)
+
+cc_library(
+    name = "lua_resty_simdjson_ffi",
+    srcs = [":all_srcs"],
+    visibility = ["//visibility:public"],
+)
+
