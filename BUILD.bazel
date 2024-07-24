@@ -24,6 +24,7 @@ cc_library(
     name = "simdjson_ffi",
     srcs = [":all_srcs"],
     copts = ["-std=c++11", "-ggdb", "-O3", "-DNDEBUG"],
+    linkstatic = False,
     visibility = ["//visibility:public"],
 )
 

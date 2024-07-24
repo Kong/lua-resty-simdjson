@@ -1,3 +1,7 @@
+// for std::signbit
+#include <cmath>
+
+
 #include "simdjson.h"
 #include "simdjson_ffi.h"
 
