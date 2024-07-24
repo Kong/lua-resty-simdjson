@@ -23,7 +23,7 @@ filegroup(
 cc_library(
     name = "simdjson_ffi",
     srcs = [":all_srcs"],
-    cppcopts = ["-std=c++11", "-O3", "-DNDEBUG"],
+    copts = ["-std=c++11", "-ggdb", "-O3", "-DNDEBUG"],
     visibility = ["//visibility:public"],
 )
 
