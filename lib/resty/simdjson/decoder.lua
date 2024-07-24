@@ -202,7 +202,9 @@ end
 function _M:process(json)
     assert(type(json) == "string")
 
-    if not self.state then
+    local state = self.state
+
+    if not state then
         error("already destroyed", 2)
     end
 
@@ -211,11 +213,11 @@ function _M:process(json)
     end
 
     -- allocate array memory on-demond
-    self.ops = assert(C.simdjson_ffi_state_get_ops(self.state))
+    self.ops = assert(C.simdjson_ffi_state_get_ops(state))
 
     self.decoding = true
 
-    local res = C.simdjson_ffi_parse(self.state, json, #json, errmsg)
+    local res = C.simdjson_ffi_parse(state, json, #json, errmsg)
     if res == SIMDJSON_FFI_ERROR then
         self.decoding = false
         return nil, "simdjson: error: " .. ffi_string(errmsg[0])
@@ -231,7 +233,7 @@ function _M:process(json)
         return nil, err
     end
 
-    if res and res ~= ngx_null and C.simdjson_ffi_is_eof(self.state) ~= 1 then
+    if res and res ~= ngx_null and C.simdjson_ffi_is_eof(state) ~= 1 then
         return nil, "simdjson: error: trailing content found"
     end
 
