@@ -6,7 +6,7 @@
 #include <limits>
 
 
-#define SIMDJSON_FFI_BATCH_SIZE 2048
+#define SIMDJSON_FFI_BATCH_SIZE 1024
 #define SIMDJSON_FFI_ERROR      -1
 
 
