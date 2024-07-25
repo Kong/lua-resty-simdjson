@@ -1,0 +1,34 @@
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        include = [
+            "src/**",
+        ],
+        exclude = [
+            "*.bazel",
+        ],
+    ),
+)
+
+filegroup(
+    name = "lualib_srcs",
+    srcs = glob([
+        "lualib/**/*.lua",
+        "lib/**/*.lua",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+
+cc_library(
+    name = "simdjson_lib",
+    srcs = [":all_srcs"],
+    copts = ["-O3", "-DNDEBUG"],
+)
+
+
+cc_shared_library(
+    name = "simdjson_ffi",
+    deps = [":simdjson_lib"],
+    visibility = ["//visibility:public"],
+)
