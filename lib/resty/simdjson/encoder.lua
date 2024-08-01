@@ -28,6 +28,7 @@ do
     local tostring = tostring
     local string_byte = string.byte
     local string_char = string.char
+    local tb_isempty = require("table.isempty")
     local tb_isarray = require("table.isarray")
     local tb_nkeys = require("table.nkeys")
 
@@ -79,19 +80,18 @@ do
     end
 
     local function table_isarray(tbl)
+        -- empty table will be encoded to json object
+        if tb_isempty(tbl) then
+            return false
+        end
+
         local is_array = tb_isarray(tbl)
         if not is_array then
             return false
         end
 
-        local nkeys = tb_nkeys(tbl)
-
-        -- empty table will be encoded to json object
-        if nkeys == 0 then
-            return false
-        end
-
         local count = #tbl
+        local nkeys = tb_nkeys(tbl)
 
         -- table is a normal array
         if count == nkeys then
