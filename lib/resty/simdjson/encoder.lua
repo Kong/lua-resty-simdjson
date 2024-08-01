@@ -84,8 +84,14 @@ do
             return false
         end
 
-        local count = #tbl
         local nkeys = tb_nkeys(tbl)
+
+        -- empty table will be encoded to json object
+        if nkeys == 0 then
+            return false
+        end
+
+        local count = #tbl
 
         -- table is a normal array
         if count == nkeys then
