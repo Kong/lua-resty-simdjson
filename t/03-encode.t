@@ -289,3 +289,31 @@ GET /t
 
 
 
+=== TEST 9: encode empty table to json object
+--- http_config eval: $::HttpConfig
+--- config
+    location = /t {
+        content_by_lua_block {
+            local simdjson = require("resty.simdjson")
+
+            local parser = simdjson.new()
+            assert(parser)
+
+            local v = parser:encode({})
+            assert(type(v) == "string")
+            assert(v == "{}")
+
+            ngx.say("ok")
+        }
+    }
+--- request
+GET /t
+--- response_body
+ok
+--- no_error_log
+[error]
+[warn]
+[crit]
+
+
+
