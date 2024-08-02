@@ -30,6 +30,7 @@ do
 
     local pairs = pairs
     local tostring = tostring
+    local getmetatable = getmetatable
     local string_byte = string.byte
     local string_char = string.char
     local tb_isempty = require("table.isempty")
@@ -85,7 +86,12 @@ do
 
     local function table_isarray(tbl)
         -- empty table will be encoded to json object
+        -- unless empty_array_mt is set
         if tb_isempty(tbl) then
+            if getmetatable(tbl) == cjson_empty_array_mt then
+                return true, 0
+            end
+
             return false
         end
 
