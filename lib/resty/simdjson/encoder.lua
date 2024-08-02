@@ -24,6 +24,10 @@ end
 
 local encode_helper
 do
+    local cjson = require("cjson.safe")
+    local cjson_empty_array = cjson.empty_array
+    local cjson_empty_array_mt = cjson.empty_array_mt
+
     local pairs = pairs
     local tostring = tostring
     local string_byte = string.byte
@@ -182,6 +186,9 @@ do
 
         elseif item == ngx_null then
             cb("null", ctx)
+
+        elseif item == cjson_empty_array then
+            cb("[]", ctx)
 
         else
             return nil, "unsupported data type: " .. typ
