@@ -24,7 +24,7 @@ end
 
 local encode_helper
 do
-    local cjson = require("cjson.safe")
+    local cjson = assert(require("cjson"))
     local cjson_empty_array = cjson.empty_array
     local cjson_empty_array_mt = cjson.empty_array_mt
 
