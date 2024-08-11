@@ -104,6 +104,7 @@ function _M:_build_array(count)
         error("already destroyed", 2)
     end
 
+    local err
     local n = 1
     local tbl = table_new(count, 0)
     local ops = self.ops
@@ -121,7 +122,10 @@ function _M:_build_array(count)
                 return tbl
             end
 
-            tbl[n] = self:_build(op)
+            tbl[n], err = self:_build(op)
+            if err then
+              return nil, err
+            end
 
             n = n + 1
         end
@@ -145,6 +149,7 @@ function _M:_build_object(count)
         error("already destroyed", 2)
     end
 
+    local err
     local tbl = table_new(0, count)
     local key
     local ops = self.ops
@@ -171,7 +176,10 @@ function _M:_build_object(count)
 
             else
                 -- value
-                tbl[key] = self:_build(op)
+                tbl[key], err = self:_build(op)
+                if err then
+                  return nil, err
+                end
 
                 key = nil
             end
