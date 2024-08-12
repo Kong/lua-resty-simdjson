@@ -24,10 +24,16 @@ end
 
 local encode_helper
 do
+    local cjson = assert(require("cjson"))
+    local cjson_empty_array = cjson.empty_array
+    local cjson_empty_array_mt = cjson.empty_array_mt
+
     local pairs = pairs
     local tostring = tostring
+    local getmetatable = getmetatable
     local string_byte = string.byte
     local string_char = string.char
+    local tb_isempty = require("table.isempty")
     local tb_isarray = require("table.isarray")
     local tb_nkeys = require("table.nkeys")
 
@@ -79,6 +85,16 @@ do
     end
 
     local function table_isarray(tbl)
+        -- empty table will be encoded to json object
+        -- unless empty_array_mt is set
+        if tb_isempty(tbl) then
+            if getmetatable(tbl) == cjson_empty_array_mt then
+                return true, 0
+            end
+
+            return false
+        end
+
         local is_array = tb_isarray(tbl)
         if not is_array then
             return false
@@ -176,6 +192,9 @@ do
 
         elseif item == ngx_null then
             cb("null", ctx)
+
+        elseif item == cjson_empty_array then
+            cb("[]", ctx)
 
         else
             return nil, "unsupported data type: " .. typ
