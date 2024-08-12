@@ -422,3 +422,43 @@ decode is not reentrant
 
 
 
+=== TEST 11: catch parsing error
+--- http_config eval: $::HttpConfig
+--- config
+    location = /t {
+        content_by_lua_block {
+            local function make_json(more_than_one_batch)
+                local n = more_than_one_batch and 2500 or 5
+                return "[[" ..
+                       string.rep([=["",]=], n) ..
+                       [=["\q",]=] ..
+                       string.rep([=["",]=], n) ..
+                       [=[""]]]=]
+            end
+
+            local simdjson = require("resty.simdjson")
+
+            local parser = simdjson.new(true)
+            assert(parser)
+
+            local v, err = parser:decode(make_json(false))
+            assert(not v)
+            ngx.say(err)
+
+            local v, err = parser:decode(make_json(true))
+            assert(not v)
+            ngx.say(err)
+        }
+    }
+--- request
+GET /t
+--- response_body
+simdjson: error: STRING_ERROR: Problem while parsing a string
+simdjson: error: TAPE_ERROR: The JSON document has an improper structure: missing or superfluous commas, braces, missing keys, etc.
+--- no_error_log
+[error]
+[warn]
+[crit]
+
+
+
