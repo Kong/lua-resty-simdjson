@@ -433,12 +433,13 @@ decode is not reentrant
                        string.rep([=["",]=], n) ..
                        [=["\q",]=] ..
                        string.rep([=["",]=], n) ..
-                       [=[""]]]=]
+                       [=[""]=] ..
+                       "]]"
             end
 
             local simdjson = require("resty.simdjson")
 
-            local parser = simdjson.new(true)
+            local parser = simdjson.new()
             assert(parser)
 
             local v, err = parser:decode(make_json(false))
