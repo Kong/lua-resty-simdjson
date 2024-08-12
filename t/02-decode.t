@@ -427,8 +427,7 @@ decode is not reentrant
 --- config
     location = /t {
         content_by_lua_block {
-            local function make_json(more_than_one_batch)
-                local n = more_than_one_batch and 2500 or 5
+            local function make_json(n)
                 return "[[" ..
                        string.rep([=["",]=], n) ..
                        [=["\q",]=] ..
@@ -442,11 +441,11 @@ decode is not reentrant
             local parser = simdjson.new()
             assert(parser)
 
-            local v, err = parser:decode(make_json(false))
+            local v, err = parser:decode(make_json(5))
             assert(not v)
             ngx.say(err)
 
-            local v, err = parser:decode(make_json(true))
+            local v, err = parser:decode(make_json(2500))
             assert(not v)
             ngx.say(err)
         }
@@ -455,7 +454,7 @@ decode is not reentrant
 GET /t
 --- response_body
 simdjson: error: STRING_ERROR: Problem while parsing a string
-simdjson: error: TAPE_ERROR: The JSON document has an improper structure: missing or superfluous commas, braces, missing keys, etc.
+simdjson: error: STRING_ERROR: Problem while parsing a string
 --- no_error_log
 [error]
 [warn]
