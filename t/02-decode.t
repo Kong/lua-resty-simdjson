@@ -422,3 +422,43 @@ decode is not reentrant
 
 
 
+=== TEST 11: catch parsing error
+--- http_config eval: $::HttpConfig
+--- config
+    location = /t {
+        content_by_lua_block {
+            local function make_json(n)
+                return "[[" ..
+                       string.rep([=["",]=], n) ..
+                       [=["\q",]=] ..
+                       string.rep([=["",]=], n) ..
+                       [=[""]=] ..
+                       "]]"
+            end
+
+            local simdjson = require("resty.simdjson")
+
+            local parser = simdjson.new()
+            assert(parser)
+
+            local v, err = parser:decode(make_json(5))
+            assert(not v)
+            ngx.say(err)
+
+            local v, err = parser:decode(make_json(2500))
+            assert(not v)
+            ngx.say(err)
+        }
+    }
+--- request
+GET /t
+--- response_body
+simdjson: error: STRING_ERROR: Problem while parsing a string
+simdjson: error: STRING_ERROR: Problem while parsing a string
+--- no_error_log
+[error]
+[warn]
+[crit]
+
+
+
