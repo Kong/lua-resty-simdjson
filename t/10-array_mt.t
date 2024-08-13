@@ -3,7 +3,7 @@
 use Test::Nginx::Socket::Lua;
 use Cwd qw(cwd);
 
-repeat_each(1);
+repeat_each(2);
 
 plan tests => repeat_each() * blocks() * 5;
 
@@ -85,6 +85,7 @@ GET /t
 
 
 === TEST 3: array_mt on non-empty tables with holes
+--- ONLY
 --- http_config eval: $::HttpConfig
 --- config
     location = /t {
