@@ -25,6 +25,7 @@ end
 local encode_helper
 do
     local cjson = assert(require("cjson"))
+    local cjson_array_mt = cjson.array_mt
     local cjson_empty_array = cjson.empty_array
     local cjson_empty_array_mt = cjson.empty_array_mt
 
@@ -95,7 +96,9 @@ do
             return false
         end
 
-        local is_array = tb_isarray(tbl)
+        -- pure array or has cjson.array_mt
+        local is_array = tb_isarray(tbl) or
+                         getmetatable(tbl) == cjson_array_mt
         if not is_array then
             return false
         end
@@ -112,6 +115,11 @@ do
 
         local max = 1
         for k in pairs(tbl) do
+            -- skip non-numeric keys
+            if type(k) ~= "number" then
+                goto continue
+            end
+
             -- negative or zero index
             if k <= 0 then
                 return false
@@ -120,6 +128,8 @@ do
             if k > max then
                 max = k
             end
+
+            ::continue::
         end
 
         return true, max
