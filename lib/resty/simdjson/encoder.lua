@@ -89,7 +89,8 @@ do
         -- empty table will be encoded to json object
         -- unless empty_array_mt is set
         if tb_isempty(tbl) then
-            if getmetatable(tbl) == cjson_empty_array_mt then
+            local mt = getmetatable(tbl)
+            if mt == cjson_empty_array_mt or mt == cjson_array_mt then
                 return true, 0
             end
 
