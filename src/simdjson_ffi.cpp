@@ -5,6 +5,28 @@
 using namespace simdjson;
 
 
+static bool need_allocation(const char *buf, size_t len) {
+    auto pagesize = sysconf(_SC_PAGESIZE);
+
+    return ((reinterpret_cast<uintptr_t>(buf + len - 1) % pagesize) <
+            SIMDJSON_PADDING);
+}
+
+
+static padded_string_view get_padded_string_view(
+    const char *buf, size_t len, padded_string &jsonbuffer) {
+
+    // unlikely case
+    if (simdjson_unlikely(need_allocation(buf, len))) {
+      jsonbuffer = padded_string(buf, len);
+      return jsonbuffer;
+    }
+
+    // no reallcation needed (very likely)
+    return padded_string_view(buf, len, len + SIMDJSON_PADDING);
+}
+
+
 // T may be ondemand::value or state->document
 template<typename T>
 static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
@@ -127,9 +149,8 @@ int simdjson_ffi_parse(simdjson_ffi_state *state,
     SIMDJSON_DEVELOPMENT_ASSERT(json);
     SIMDJSON_DEVELOPMENT_ASSERT(errmsg);
 
-    state->json = padded_string(json, len);
-
-    state->document = state->parser.iterate(state->json);
+    state->document = state->parser.iterate(
+                          get_padded_string_view(json, len, state->json));
     state->ops_n = 0;
 
     // the return value is intentionally ignored
