@@ -2,6 +2,7 @@
 #define SIMDJSON_FFI_H
 
 
+#include <unistd.h>
 #include <stack>
 #include <vector>
 #include <limits>
