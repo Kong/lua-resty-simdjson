@@ -5,10 +5,18 @@
 using namespace simdjson;
 
 
-static bool need_allocation(const char *buf, size_t len) {
-    auto pagesize = sysconf(_SC_PAGESIZE);
+// we will initialize it only once
+static long PAGESIZE = 0;
 
-    return ((reinterpret_cast<uintptr_t>(buf + len - 1) % pagesize) <
+
+static bool need_allocation(const char *buf, size_t len) {
+    if (PAGESIZE == 0) {
+        PAGESIZE = sysconf(_SC_PAGESIZE);
+    }
+
+    SIMDJSON_DEVELOPMENT_ASSERT(PAGESIZE > 0);
+
+    return ((reinterpret_cast<uintptr_t>(buf + len - 1) % PAGESIZE) <
             SIMDJSON_PADDING);
 }
 
