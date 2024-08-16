@@ -103,7 +103,11 @@ extern "C"
 simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state) {
     SIMDJSON_DEVELOPMENT_ASSERT(state);
 
-    return state->ops;
+    state->ops.resize(SIMDJSON_FFI_BATCH_SIZE);
+
+    SIMDJSON_DEVELOPMENT_ASSERT(state->ops.size() == SIMDJSON_FFI_BATCH_SIZE);
+
+    return state->ops.data();
 }
 
 
@@ -159,12 +163,13 @@ extern "C"
 int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
     SIMDJSON_DEVELOPMENT_ASSERT(state);
     SIMDJSON_DEVELOPMENT_ASSERT(errmsg);
+    SIMDJSON_DEVELOPMENT_ASSERT(state->ops.size() == SIMDJSON_FFI_BATCH_SIZE);
 
     state->ops_n = 0;
 
     while (!state->frames.empty()) {
 
-        if (state->ops_n >= SIMDJSON_FFI_BATCH_SIZE - 1) {
+        if (state->ops_n >= state->ops.size() - 1) {
             // -1 for key value pair which requires 2 ops
             return state->ops_n;
         }
@@ -191,7 +196,7 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
                         break;
                     }
 
-                    if (state->ops_n >= SIMDJSON_FFI_BATCH_SIZE) {
+                    if (state->ops_n >= state->ops.size()) {
                         // array can use the last of the slots, no need to
                         // reserve two slots like object below
                         frame.processing = true;
@@ -233,7 +238,7 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
                         break;
                     }
 
-                    if (state->ops_n >= SIMDJSON_FFI_BATCH_SIZE - 1) {
+                    if (state->ops_n >= state->ops.size() - 1) {
                         frame.processing = true;
 
                         return state->ops_n;

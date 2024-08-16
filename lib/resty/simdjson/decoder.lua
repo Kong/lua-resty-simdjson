@@ -48,7 +48,7 @@ function _M.new(yieldable)
         ops_index = 0,
         ops_size = 0,
         state = ffi_gc(state, C.simdjson_ffi_state_free),
-        ops = C.simdjson_ffi_state_get_ops(state),
+        ops = nil,  -- reserved for decode
         yieldable = yieldable,
         decoding = false,
     }
@@ -202,7 +202,9 @@ end
 function _M:process(json)
     assert(type(json) == "string")
 
-    if not self.state then
+    local state = self.state
+
+    if not state then
         error("already destroyed", 2)
     end
 
@@ -210,9 +212,12 @@ function _M:process(json)
         error("decode is not reentrant", 2)
     end
 
+    -- allocate array memory on-demond
+    self.ops = assert(C.simdjson_ffi_state_get_ops(state))
+
     self.decoding = true
 
-    local res = C.simdjson_ffi_parse(self.state, json, #json, errmsg)
+    local res = C.simdjson_ffi_parse(state, json, #json, errmsg)
     if res == SIMDJSON_FFI_ERROR then
         self.decoding = false
         return nil, "simdjson: error: " .. ffi_string(errmsg[0])
@@ -228,7 +233,7 @@ function _M:process(json)
         return nil, err
     end
 
-    if res and res ~= ngx_null and C.simdjson_ffi_is_eof(self.state) ~= 1 then
+    if res and res ~= ngx_null and C.simdjson_ffi_is_eof(state) ~= 1 then
         return nil, "simdjson: error: trailing content found"
     end
 
