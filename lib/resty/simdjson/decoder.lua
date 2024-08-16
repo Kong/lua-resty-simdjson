@@ -58,7 +58,9 @@ end
 
 
 function _M:destroy()
-    if not self.state then
+    local state = self.state
+
+    if not state then
         error("already destroyed", 2)
     end
 
@@ -66,7 +68,7 @@ function _M:destroy()
         error("decoding, can not be destroyed", 2)
     end
 
-    C.simdjson_ffi_state_free(ffi_gc(self.state, nil))
+    C.simdjson_ffi_state_free(ffi_gc(state, nil))
     self.state = nil
     self.ops = nil
 end
@@ -100,7 +102,9 @@ end
 
 
 function _M:_build_array(count)
-    if not self.state then
+    local state = self.state
+
+    if not state then
         error("already destroyed", 2)
     end
 
@@ -132,7 +136,7 @@ function _M:_build_array(count)
 
         yielding(yieldable)
 
-        self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
+        self.ops_size = C.simdjson_ffi_next(state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
             return nil, "simdjson: error: " .. ffi_string(errmsg[0])
         end
@@ -145,7 +149,9 @@ end
 
 
 function _M:_build_object(count)
-    if not self.state then
+    local state = self.state
+
+    if not state then
         error("already destroyed", 2)
     end
 
@@ -187,7 +193,7 @@ function _M:_build_object(count)
 
         yielding(yieldable)
 
-        self.ops_size = C.simdjson_ffi_next(self.state, errmsg)
+        self.ops_size = C.simdjson_ffi_next(state, errmsg)
         if self.ops_size == SIMDJSON_FFI_ERROR then
             return nil, "simdjson: error: " .. ffi_string(errmsg[0])
         end
