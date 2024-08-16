@@ -25,6 +25,7 @@ end
 local encode_helper
 do
     local cjson = assert(require("cjson"))
+    local cjson_array_mt = cjson.array_mt
     local cjson_empty_array = cjson.empty_array
     local cjson_empty_array_mt = cjson.empty_array_mt
 
@@ -88,14 +89,17 @@ do
         -- empty table will be encoded to json object
         -- unless empty_array_mt is set
         if tb_isempty(tbl) then
-            if getmetatable(tbl) == cjson_empty_array_mt then
+            local mt = getmetatable(tbl)
+            if mt == cjson_empty_array_mt or mt == cjson_array_mt then
                 return true, 0
             end
 
             return false
         end
 
-        local is_array = tb_isarray(tbl)
+        -- pure array or has cjson.array_mt
+        local is_array = tb_isarray(tbl) or
+                         getmetatable(tbl) == cjson_array_mt
         if not is_array then
             return false
         end
@@ -110,8 +114,13 @@ do
 
         -- table may have negative/zero index or hole
 
-        local max = 1
+        local max = 0
         for k in pairs(tbl) do
+            -- skip non-numeric keys
+            if type(k) ~= "number" then
+                goto continue
+            end
+
             -- negative or zero index
             if k <= 0 then
                 return false
@@ -120,6 +129,8 @@ do
             if k > max then
                 max = k
             end
+
+            ::continue::
         end
 
         return true, max
