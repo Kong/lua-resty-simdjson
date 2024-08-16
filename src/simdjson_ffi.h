@@ -2,8 +2,8 @@
 #define SIMDJSON_FFI_H
 
 
-#include <vector>
 #include <stack>
+#include <vector>
 #include <limits>
 
 
