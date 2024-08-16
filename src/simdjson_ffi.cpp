@@ -9,6 +9,12 @@ using namespace simdjson;
 static long PAGESIZE = 0;
 
 
+// An optimization from https://github.com/simdjson/simdjson/blob/master/doc/performance.md#free-padding
+// If ending of `buf` is at least `SIMDJSON_PADDING` away from the end of the current page,
+// then we technically don't need to copy the string and can safely let simdjson process
+// on the original buffer directly as `padded_string_view`.
+// This is because reading within the boundary of a mapped memory page is guaranteed
+// not to fail, even if these area might contain garbage data, simdjson will work correctly.
 static bool need_allocation(const char *buf, size_t len) {
     if (PAGESIZE == 0) {
         PAGESIZE = getpagesize();
