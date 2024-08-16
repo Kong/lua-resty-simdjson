@@ -150,7 +150,7 @@ simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state, size_t 
 
     state->ops.resize(batch_size);
 
-    //SIMDJSON_DEVELOPMENT_ASSERT(state->ops.size() == SIMDJSON_FFI_BATCH_SIZE);
+    SIMDJSON_DEVELOPMENT_ASSERT(state->ops.size() <= SIMDJSON_FFI_BATCH_SIZE);
 
     return state->ops.data();
 }
@@ -207,7 +207,7 @@ extern "C"
 int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
     SIMDJSON_DEVELOPMENT_ASSERT(state);
     SIMDJSON_DEVELOPMENT_ASSERT(errmsg);
-    //SIMDJSON_DEVELOPMENT_ASSERT(state->ops.size() == SIMDJSON_FFI_BATCH_SIZE);
+    SIMDJSON_DEVELOPMENT_ASSERT(state->ops.size() <= SIMDJSON_FFI_BATCH_SIZE);
 
     state->ops_n = 0;
 
