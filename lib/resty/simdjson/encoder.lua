@@ -114,7 +114,7 @@ do
 
         -- table may have negative/zero index or hole
 
-        local max = 1
+        local max = 0
         for k in pairs(tbl) do
             -- skip non-numeric keys
             if type(k) ~= "number" then
