@@ -11,7 +11,7 @@ static long PAGESIZE = 0;
 
 static bool need_allocation(const char *buf, size_t len) {
     if (PAGESIZE == 0) {
-        PAGESIZE = sysconf(_SC_PAGESIZE);
+        PAGESIZE = getpagesize();
     }
 
     SIMDJSON_DEVELOPMENT_ASSERT(PAGESIZE > 0);
