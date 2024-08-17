@@ -221,7 +221,8 @@ function _M:process(json)
     local json_len = #json
 
     -- allocate array memory on-demond
-    self.ops = assert(C.simdjson_ffi_state_get_ops(state, json_len))
+    self.ops = assert(C.simdjson_ffi_state_get_ops(
+                        state, self.yieldable and json_len or 0))
 
     self.decoding = true
 

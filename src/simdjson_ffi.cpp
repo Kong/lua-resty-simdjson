@@ -142,11 +142,12 @@ extern "C"
 simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state, size_t json_len) {
     SIMDJSON_DEVELOPMENT_ASSERT(state);
 
-    size_t batch_size = (json_len <= 1024) ?
+    size_t batch_size = (json_len == 0) ? SIMDJSON_FFI_BATCH_SIZE :
+                        (json_len <= 1024) ?
                             SIMDJSON_FFI_BATCH_SIZE / 4 :
-                            (json_len <= 4 * 1024 ?
-                                 SIMDJSON_FFI_BATCH_SIZE / 2 :
-                                 SIMDJSON_FFI_BATCH_SIZE);
+                        (json_len <= 4 * 1024 ?
+                            SIMDJSON_FFI_BATCH_SIZE / 2 :
+                            SIMDJSON_FFI_BATCH_SIZE);
 
     state->ops.resize(batch_size);
 
