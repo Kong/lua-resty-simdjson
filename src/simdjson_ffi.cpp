@@ -16,10 +16,6 @@ static long PAGESIZE = 0;
 // This is because reading within the boundary of a mapped memory page is guaranteed
 // not to fail, even if these area might contain garbage data, simdjson will work correctly.
 static bool need_allocation(const char *buf, size_t len) {
-    if (PAGESIZE == 0) {
-        PAGESIZE = getpagesize();
-    }
-
     SIMDJSON_DEVELOPMENT_ASSERT(PAGESIZE > 0);
 
     return ((reinterpret_cast<uintptr_t>(buf + len - 1) % PAGESIZE) <
@@ -127,6 +123,11 @@ bool simdjson_process_value(simdjson_ffi_state &state, simdjson_result<std::stri
 
 extern "C"
 simdjson_ffi_state *simdjson_ffi_state_new() {
+    // init static variable PAGESIZE
+    if (PAGESIZE == 0) {
+        PAGESIZE = getpagesize();
+    }
+
     auto state = new(std::nothrow) simdjson_ffi_state();
 
     SIMDJSON_DEVELOPMENT_ASSERT(state);
