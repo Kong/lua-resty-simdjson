@@ -218,12 +218,15 @@ function _M:process(json)
         error("decode is not reentrant", 2)
     end
 
+    local json_len = #json
+
     -- allocate array memory on-demond
-    self.ops = assert(C.simdjson_ffi_state_get_ops(state))
+    self.ops = assert(C.simdjson_ffi_state_get_ops(
+                        state, self.yieldable and json_len or 0))
 
     self.decoding = true
 
-    local res = C.simdjson_ffi_parse(state, json, #json, errmsg)
+    local res = C.simdjson_ffi_parse(state, json, json_len, errmsg)
     if res == SIMDJSON_FFI_ERROR then
         self.decoding = false
         return nil, "simdjson: error: " .. ffi_string(errmsg[0])

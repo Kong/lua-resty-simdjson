@@ -71,7 +71,7 @@ typedef struct {
 typedef struct simdjson_ffi_state_t simdjson_ffi_state;
 
 simdjson_ffi_state *simdjson_ffi_state_new();
-simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state);
+simdjson_ffi_op_t *simdjson_ffi_state_get_ops(simdjson_ffi_state *state, size_t json_len);
 void simdjson_ffi_state_free(simdjson_ffi_state *state);
 int simdjson_ffi_is_eof(simdjson_ffi_state *state);
 int simdjson_ffi_parse(simdjson_ffi_state *state, const char *json, size_t len, char **errmsg);
