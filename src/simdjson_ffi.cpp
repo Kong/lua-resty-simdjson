@@ -135,7 +135,7 @@ simdjson_ffi_state *simdjson_ffi_state_new() {
 }
 
 
-// We try to minimize the memory usage for short json string,
+// We try to minimize the memory usage for small json,
 // if the length of string is less than 4KB,
 // we will allocate one smaller memory.
 extern "C"
