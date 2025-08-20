@@ -4,9 +4,10 @@
 
 using namespace simdjson;
 
-
+#ifndef PAGESIZE // This is defined as a macro on some systms.
 // we will initialize it only once
 static long PAGESIZE = 0;
+#endif
 
 
 // An optimization from https://github.com/simdjson/simdjson/blob/master/doc/performance.md#free-padding
@@ -16,9 +17,11 @@ static long PAGESIZE = 0;
 // This is because reading within the boundary of a mapped memory page is guaranteed
 // not to fail, even if these area might contain garbage data, simdjson will work correctly.
 static bool need_allocation(const char *buf, size_t len) {
+#ifndef PAGESIZE
     if (PAGESIZE == 0) {
         PAGESIZE = getpagesize();
     }
+#endif
 
     SIMDJSON_DEVELOPMENT_ASSERT(PAGESIZE > 0);
 
