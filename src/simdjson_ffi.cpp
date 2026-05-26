@@ -101,6 +101,12 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
         break;
     }
 
+    case ondemand::json_type::unknown:
+        // simdjson >=4.x returns json_type::unknown for values whose leading
+        // byte isn't a valid JSON start char (e.g. `.9`, `'x'`, `True`).
+        // Surface this as a normal parse error instead of UB.
+        throw simdjson_error(TAPE_ERROR);
+
     default:
         SIMDJSON_UNREACHABLE();
     }

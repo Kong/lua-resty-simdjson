@@ -224,7 +224,7 @@ with [`:encode_helper`](#simdjsonencode_helper), or approximately same amount of
 
 Copyright 2023 Datong Sun (dndx@idndx.com)
 
-Copyright 2024 Kong Inc.
+Copyright 2024 - 2026 Kong Inc.
 
 Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)>. Files in the project may not be
