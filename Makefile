@@ -15,8 +15,8 @@ endif
 OPENRESTY_PREFIX=/usr/local/openresty
 
 #LUA_VERSION := 5.1
-PREFIX ?=          /usr/local
-LUA_LIB_DIR ?=     $(PREFIX)/lib/lua/$(LUA_VERSION)
+PREFIX ?= /usr/local
+LUA_LIB_DIR ?= $(PREFIX)/lib/lua/$(LUA_VERSION)
 INSTALL ?= install
 
 CXX=c++

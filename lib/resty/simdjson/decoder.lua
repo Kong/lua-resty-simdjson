@@ -218,7 +218,7 @@ function _M:process(json)
         error("decode is not reentrant", 2)
     end
 
-    -- allocate array memory on-demond
+    -- allocate array memory on-demand
     self.ops = assert(C.simdjson_ffi_state_get_ops(state))
 
     self.decoding = true
