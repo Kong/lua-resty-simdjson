@@ -131,6 +131,24 @@ bool simdjson_process_value(simdjson_ffi_state &state, simdjson_result<std::stri
 }
 
 
+// Drop everything that belongs to one decode.
+//
+// The frames hold iterators into `state->document`. `document` is a member of
+// `state`, so its address stays the same across decodes. A frame that survives
+// a failed decode therefore looks valid to the next decode and resumes against
+// a different document, which corrupts the result. Clear the stack whenever a
+// decode aborts, and again before a new one starts.
+static void simdjson_ffi_state_reset(simdjson_ffi_state *state) {
+    // std::stack has no clear()
+    std::stack<simdjson_ffi_stack_frame>().swap(state->frames);
+
+    state->ops_n = 0;
+
+    // release the tmp string to save memory
+    state->json = padded_string();
+}
+
+
 extern "C"
 simdjson_ffi_state *simdjson_ffi_state_new() {
     auto state = new(std::nothrow) simdjson_ffi_state();
@@ -169,9 +187,11 @@ int simdjson_ffi_parse(simdjson_ffi_state *state,
     SIMDJSON_DEVELOPMENT_ASSERT(json);
     SIMDJSON_DEVELOPMENT_ASSERT(errmsg);
 
+    // a previous decode may have been abandoned part way through
+    simdjson_ffi_state_reset(state);
+
     state->document = state->parser.iterate(
                           get_padded_string_view(json, len, state->json));
-    state->ops_n = 0;
 
     // the return value is intentionally ignored
     // because JSON could be either a bare scalar or
@@ -185,8 +205,7 @@ int simdjson_ffi_parse(simdjson_ffi_state *state,
 } catch (simdjson_error &e) {
     *errmsg = e.what();
 
-    // clean up tmp string on error to save memory
-    state->json = padded_string();
+    simdjson_ffi_state_reset(state);
 
     return SIMDJSON_FFI_ERROR;
 }
@@ -310,8 +329,7 @@ int simdjson_ffi_next(simdjson_ffi_state *state, const char **errmsg) try {
 } catch (simdjson_error &e) {
     *errmsg = e.what();
 
-    // clean up tmp string on error to save memory
-    state->json = padded_string();
+    simdjson_ffi_state_reset(state);
 
     return SIMDJSON_FFI_ERROR;
 }
