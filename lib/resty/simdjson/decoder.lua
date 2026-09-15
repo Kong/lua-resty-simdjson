@@ -205,6 +205,25 @@ function _M:_build_object(count)
 end
 
 
+local function do_process(self, json, state)
+    local res = C.simdjson_ffi_parse(state, json, #json, errmsg)
+    if res == SIMDJSON_FFI_ERROR then
+        return nil, "simdjson: error: " .. ffi_string(errmsg[0])
+    end
+
+    local res, err = self:_build(self.ops[0])
+    if err then
+        return nil, err
+    end
+
+    if res and res ~= ngx_null and C.simdjson_ffi_is_eof(state) ~= 1 then
+        return nil, "simdjson: error: trailing content found"
+    end
+
+    return res
+end
+
+
 function _M:process(json)
     assert(type(json) == "string")
 
@@ -228,24 +247,32 @@ function _M:process(json)
 
     self.decoding = true
 
-    local res = C.simdjson_ffi_parse(state, json, #json, errmsg)
-    if res == SIMDJSON_FFI_ERROR then
+    local res, err
+
+    if self.yieldable then
+        -- The builders raise when the opcode stream does not match what they
+        -- expect. That would leave this flag set, and the guard above would
+        -- then refuse every later decode on this object, and destroy() would
+        -- refuse too. Clear the flag before the error travels on. Only a
+        -- yieldable decoder reads the flag, so only it pays for the pcall.
+        local ok
+        ok, res, err = pcall(do_process, self, json, state)
+
         self.decoding = false
-        return nil, "simdjson: error: " .. ffi_string(errmsg[0])
+
+        if not ok then
+            -- res holds the error, which already carries its own position
+            error(res, 0)
+        end
+
+    else
+        res, err = do_process(self, json, state)
+
+        self.decoding = false
     end
-
-    local op = self.ops[0]
-
-    local res, err = self:_build(op)
-
-    self.decoding = false
 
     if err then
         return nil, err
-    end
-
-    if res and res ~= ngx_null and C.simdjson_ffi_is_eof(state) ~= 1 then
-        return nil, "simdjson: error: trailing content found"
     end
 
     return res
