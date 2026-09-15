@@ -139,8 +139,11 @@ bool simdjson_process_value(simdjson_ffi_state &state, simdjson_result<std::stri
 // a different document, which corrupts the result. Clear the stack whenever a
 // decode aborts, and again before a new one starts.
 static void simdjson_ffi_state_reset(simdjson_ffi_state *state) {
-    // std::stack has no clear()
-    std::stack<simdjson_ffi_stack_frame>().swap(state->frames);
+    // std::stack has no clear(), and swapping in an empty one would allocate
+    // a fresh deque on every parse. Popping reuses the nodes already there.
+    while (!state->frames.empty()) {
+        state->frames.pop();
+    }
 
     state->ops_n = 0;
 
