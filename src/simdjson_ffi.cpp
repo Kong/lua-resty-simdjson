@@ -4,7 +4,7 @@
 
 using namespace simdjson;
 
-#ifndef PAGESIZE // This is defined as a macro on some systms.
+#ifndef PAGESIZE // This is defined as a macro on some systems.
 // we will initialize it only once
 static long PAGESIZE = 0;
 #endif
