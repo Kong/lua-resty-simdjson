@@ -153,3 +153,62 @@ ok
 [error]
 [warn]
 [crit]
+
+
+=== TEST 4: a yieldable decoder recovers both the flag and the batch cursor
+--- http_config eval: $::HttpConfig
+--- config
+    location = /t {
+        content_by_lua_block {
+            local decoder = require("resty.simdjson.decoder")
+
+            -- big enough to need several batches, so the raise leaves the
+            -- cursor inside a batch as well as the decoding flag set
+            local t = {}
+            for i = 1, 3000 do
+                t[i] = i
+            end
+            local big = "[" .. table.concat(t, ",") .. "]"
+
+            local dec = decoder.new(true)
+
+            local build = dec._build
+            local calls = 0
+            dec._build = function(self, op)
+                calls = calls + 1
+                if calls == 3 then
+                    error("simulated build failure")
+                end
+                return build(self, op)
+            end
+
+            local ok = pcall(dec.process, dec, big)
+            assert(not ok, "expected the build to raise")
+            assert(dec.ops_index > 0,
+                   "expected a stale cursor, got " .. tostring(dec.ops_index))
+            assert(dec.decoding == false,
+                   "expected the decoding flag to be cleared")
+
+            dec._build = build
+
+            -- clearing the flag lets process() run again, and the cursor
+            -- reset then keeps it off the abandoned document's ops entries
+            local res, err = dec:process('{"a":[1,2],"b":{"c":3}}')
+            assert(err == nil, "reuse failed: " .. tostring(err))
+            assert(res.a[1] == 1)
+            assert(res.a[2] == 2)
+            assert(res.b.c == 3)
+
+            dec:destroy()
+
+            ngx.say("ok")
+        }
+    }
+--- request
+GET /t
+--- response_body
+ok
+--- no_error_log
+[error]
+[warn]
+[crit]
