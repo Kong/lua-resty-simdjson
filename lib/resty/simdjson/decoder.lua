@@ -15,6 +15,8 @@ local ffi_string = ffi.string
 local ffi_gc = ffi.gc
 local ngx_null = ngx.null
 local ngx_sleep = ngx.sleep
+local co_running = coroutine.running
+local co_status = coroutine.status
 
 
 local SIMDJSON_FFI_OPCODE_ARRAY = C.SIMDJSON_FFI_OPCODE_ARRAY
@@ -51,9 +53,32 @@ function _M.new(yieldable)
         ops = nil,  -- reserved for decode
         yieldable = yieldable,
         decoding = false,
+        decoding_co = nil,  -- reserved for a yieldable decode
     }
 
     return setmetatable(self, _MT)
+end
+
+
+-- A yieldable decode marks the decoder while it runs, so that a second decode
+-- on the same object is refused. The marker can outlive the decode that set
+-- it: pcall catches a raise, but a light thread killed while parked in
+-- yielding() unwinds nothing. Give the marker back once the coroutine that
+-- set it can no longer resume.
+--
+-- A suspended owner is left alone on purpose. It may still be resumed, and
+-- reclaiming there would run two decodes over one C++ state.
+local function reclaim_abandoned(self)
+    local owner = self.decoding_co
+
+    if not owner or owner == co_running() or co_status(owner) ~= "dead" then
+        return false
+    end
+
+    self.decoding = false
+    self.decoding_co = nil
+
+    return true
 end
 
 
@@ -64,7 +89,7 @@ function _M:destroy()
         error("already destroyed", 2)
     end
 
-    if self.decoding then
+    if self.decoding and not reclaim_abandoned(self) then
         error("decoding, can not be destroyed", 2)
     end
 
@@ -233,7 +258,7 @@ function _M:process(json)
         error("already destroyed", 2)
     end
 
-    if self.yieldable and self.decoding then
+    if self.yieldable and self.decoding and not reclaim_abandoned(self) then
         error("decode is not reentrant", 2)
     end
 
@@ -245,20 +270,22 @@ function _M:process(json)
     -- allocate array memory on-demand
     self.ops = assert(C.simdjson_ffi_state_get_ops(state))
 
-    self.decoding = true
-
     local res, err
 
     if self.yieldable then
-        -- The builders raise when the opcode stream does not match what they
-        -- expect. That would leave this flag set, and the guard above would
-        -- then refuse every later decode on this object, and destroy() would
-        -- refuse too. Clear the flag before the error travels on. Only a
-        -- yieldable decoder reads the flag, so only it pays for the pcall.
+        -- Only a yieldable decode can be seen part way through, so only it
+        -- needs the marker. The builders raise when the opcode stream is not
+        -- what they expect, and that would leave the marker set: the guard
+        -- above would refuse every later decode, and destroy() would refuse
+        -- too. Clear it before the error travels on.
+        self.decoding = true
+        self.decoding_co = co_running()
+
         local ok
         ok, res, err = pcall(do_process, self, json, state)
 
         self.decoding = false
+        self.decoding_co = nil
 
         if not ok then
             -- res holds the error, which already carries its own position
@@ -266,9 +293,9 @@ function _M:process(json)
         end
 
     else
+        -- No marker is set here, so a raise leaves nothing for destroy() to
+        -- trip over, and this path stays free of the pcall.
         res, err = do_process(self, json, state)
-
-        self.decoding = false
     end
 
     if err then

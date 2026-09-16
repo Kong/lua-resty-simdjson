@@ -212,3 +212,136 @@ ok
 [error]
 [warn]
 [crit]
+
+
+=== TEST 5: a non-yieldable decoder can still be destroyed after a raise
+--- http_config eval: $::HttpConfig
+--- config
+    location = /t {
+        content_by_lua_block {
+            local decoder = require("resty.simdjson.decoder")
+
+            local dec = decoder.new(false)
+
+            dec._build = function()
+                error("simulated build failure")
+            end
+
+            local ok = pcall(dec.process, dec, '{"a":1}')
+            assert(not ok, "expected the build to raise")
+
+            -- no marker is set for a non-yieldable decode, so cleanup works
+            assert(dec.decoding == false,
+                   "a non-yieldable decode must not set the marker")
+
+            local dok, derr = pcall(dec.destroy, dec)
+            assert(dok, "destroy failed: " .. tostring(derr))
+
+            ngx.say("ok")
+        }
+    }
+--- request
+GET /t
+--- response_body
+ok
+--- no_error_log
+[error]
+[warn]
+[crit]
+
+
+
+=== TEST 6: a killed light thread does not strand a yieldable decoder
+--- http_config eval: $::HttpConfig
+--- config
+    location = /t {
+        content_by_lua_block {
+            local decoder = require("resty.simdjson.decoder")
+
+            local t = {}
+            for i = 1, 20000 do
+                t[i] = i
+            end
+            local big = "[" .. table.concat(t, ",") .. "]"
+
+            local dec = decoder.new(true)
+
+            -- park the decode at a yield, then kill the thread. pcall never
+            -- unwinds here, so the marker is left behind.
+            local co = ngx.thread.spawn(function()
+                dec:process(big)
+            end)
+            ngx.sleep(0)
+            ngx.thread.kill(co)
+
+            assert(dec.decoding == true,
+                   "expected the marker to survive the kill")
+
+            -- the owner can never resume, so the decoder takes itself back
+            local res, err = dec:process('{"a":[1,2],"b":{"c":3}}')
+            assert(err == nil, "reuse failed: " .. tostring(err))
+            assert(res.a[1] == 1)
+            assert(res.b.c == 3)
+
+            dec:destroy()
+
+            ngx.say("ok")
+        }
+    }
+--- request
+GET /t
+--- response_body
+ok
+--- no_error_log
+[error]
+[warn]
+[crit]
+
+
+
+=== TEST 7: a live owner is never reclaimed
+--- http_config eval: $::HttpConfig
+--- config
+    location = /t {
+        content_by_lua_block {
+            local decoder = require("resty.simdjson.decoder")
+
+            local t = {}
+            for i = 1, 20000 do
+                t[i] = i
+            end
+            local big = "[" .. table.concat(t, ",") .. "]"
+
+            local dec = decoder.new(true)
+
+            local co = ngx.thread.spawn(function()
+                local res, err = dec:process(big)
+                assert(err == nil, "outer decode failed: " .. tostring(err))
+                assert(#res == 20000)
+            end)
+            ngx.sleep(0)
+
+            -- the owner is only suspended, so neither door opens
+            local ok, err = pcall(dec.process, dec, '{"a":1}')
+            assert(not ok and string.find(err, "decode is not reentrant", 1, true),
+                   "the reentrancy guard did not fire: " .. tostring(err))
+
+            local dok, derr = pcall(dec.destroy, dec)
+            assert(not dok and string.find(derr, "can not be destroyed", 1, true),
+                   "the destroy guard did not fire: " .. tostring(derr))
+
+            ngx.thread.wait(co)
+
+            dec:destroy()
+
+            ngx.say("ok")
+        }
+    }
+--- request
+GET /t
+--- response_body
+ok
+--- no_error_log
+[error]
+[warn]
+[crit]
