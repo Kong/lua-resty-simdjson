@@ -74,14 +74,25 @@ struct simdjson_ffi_stack_frame {
             Iter current;
             Iter end;
 
-            range(Iter current, Iter end) : current(current), end(end) {}
+            range(Iter current, Iter end) :
+                current(std::move(current)), end(std::move(end)) {}
         };
 
         range<simdjson::ondemand::array_iterator>  array;
         range<simdjson::ondemand::object_iterator> object;
 
-        it(simdjson::ondemand::array &v): array(v.begin(), v.end()) {}
-        it(simdjson::ondemand::object &v): object(v.begin(), v.end()) {}
+        // `v` is a local in `simdjson_process_value` that the frame outlives.
+        // With SIMDJSON_DEVELOPMENT_CHECKS, simdjson >=5.x makes `begin() &`
+        // store a pointer to `v` in the iterator to lock it, and that pointer
+        // would dangle. `begin() &&` doesn't lock. It doesn't modify `v`
+        // either, so calling `v.end()` in the same argument list is safe.
+        it(simdjson::ondemand::array &v): array(std::move(v).begin(), v.end()) {}
+        it(simdjson::ondemand::object &v): object(std::move(v).begin(), v.end()) {}
+
+        // With SIMDJSON_DEVELOPMENT_CHECKS the iterators are not trivially
+        // destructible, so the union can't have an implicit destructor.
+        // The frame destroys the active member.
+        ~it() {}
     } it;
 
     simdjson_ffi_stack_frame(simdjson::ondemand::array &v):
@@ -89,6 +100,24 @@ struct simdjson_ffi_stack_frame {
 
     simdjson_ffi_stack_frame(simdjson::ondemand::object &v):
         state(simdjson_ffi_resume_state::object), it(v) {}
+
+    ~simdjson_ffi_stack_frame() {
+        switch (state) {
+            case simdjson_ffi_resume_state::array:
+                it.array.~range();
+                break;
+
+            case simdjson_ffi_resume_state::object:
+                it.object.~range();
+                break;
+
+            default:
+                SIMDJSON_UNREACHABLE();
+        }
+    }
+
+    simdjson_ffi_stack_frame(const simdjson_ffi_stack_frame &) = delete;
+    simdjson_ffi_stack_frame &operator=(const simdjson_ffi_stack_frame &) = delete;
 };
 
 
