@@ -81,7 +81,8 @@ static bool simdjson_process_value(simdjson_ffi_state &state, T&& value) {
 
     case ondemand::json_type::string: {
         state.ops[state.ops_n].opcode = SIMDJSON_FFI_OPCODE_STRING;
-        std::string_view str = value;
+        // simdjson >=5.x made the scalar conversion operators explicit
+        std::string_view str = value.get_string().value();
 
         state.ops[state.ops_n].size = str.size();
         state.ops[state.ops_n].val.str = str.data();
@@ -192,6 +193,8 @@ int simdjson_ffi_parse(simdjson_ffi_state *state,
     SIMDJSON_DEVELOPMENT_ASSERT(state);
     SIMDJSON_DEVELOPMENT_ASSERT(json);
     SIMDJSON_DEVELOPMENT_ASSERT(errmsg);
+    // simdjson_ffi_state_get_ops() must be called first
+    SIMDJSON_DEVELOPMENT_ASSERT(state->ops.size() == SIMDJSON_FFI_BATCH_SIZE);
 
     // a previous decode may have been abandoned part way through
     simdjson_ffi_state_reset(state);
